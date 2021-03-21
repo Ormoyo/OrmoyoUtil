@@ -263,9 +263,7 @@ public class Utils {
 			if(this.tick == 0) {
 				this.consumer.accept(this.consumerValue);
 				this.performAmount--;
-				if(this.performAmount > 0) {
-					this.tick = 0;
-				}else {
+				if(this.performAmount <= 0) {
 					set.remove(this);
 				}
 			}
