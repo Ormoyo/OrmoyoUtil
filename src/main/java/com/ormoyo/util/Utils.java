@@ -206,6 +206,17 @@ public class Utils {
 			throw new IllegalStateException("Unable to get yaw from facing " + facing);
 		}
 	}
+	
+	public static float getPitchFromFacing(EnumFacing facing) {
+		switch(facing) {
+		case UP:
+			return -90;
+		case DOWN:
+			return 90;
+		default:
+			throw new IllegalStateException("Unable to get pitch from facing " + facing);
+		}
+	}
     
 	public static boolean doesBlockHaveCollison(World world, BlockPos pos) {
 		return world.getBlockState(pos).getCollisionBoundingBox(world, pos) != Block.NULL_AABB;

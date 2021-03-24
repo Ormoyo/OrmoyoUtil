@@ -48,8 +48,8 @@ public abstract class Ability {
 	protected int cooldown;
 	protected boolean startCooldown;
 	
-	protected EntityPlayer owner;
-	protected AbilityEntry entry;
+	protected final EntityPlayer owner;
+	private AbilityEntry entry;
 	protected boolean isEnabled = true;
 	
 	public void onKeyPress() {}

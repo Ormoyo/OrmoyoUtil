@@ -1,5 +1,7 @@
 package com.ormoyo.util.abilities;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -454,4 +456,20 @@ public class AbilitySyncedValue {
 			return this.parser;
 		}
 	}
+	
+	/**
+	 *If a field has this annotation only the server can change the field value for the client
+	 */
+	@Target(ElementType.FIELD)
+	public static @interface OnlyChangableForServer {}
+	/**
+	 *If a field has this annotation only the client can change the field value for the server
+	 */
+	@Target(ElementType.FIELD)
+	public static @interface OnlyChangableForClient {}
+	/**
+	 *If a field has this annotation cannot change his value through {@link AbilitySyncedValue}
+	 */
+	@Target(ElementType.FIELD)
+	public static @interface UnchangeableValue {}
 }

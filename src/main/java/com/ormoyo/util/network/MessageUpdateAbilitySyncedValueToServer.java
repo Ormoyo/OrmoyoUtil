@@ -137,6 +137,7 @@ public class MessageUpdateAbilitySyncedValueToServer extends AbstractMessage<Mes
 				if(message.superClass == null) {
 					try {
 						Field field = ability.getClass().getDeclaredField(message.name);
+						if(field.isAnnotationPresent(AbilitySyncedValue.OnlyChangableForServer.class) || field.isAnnotationPresent(AbilitySyncedValue.UnchangeableValue.class)) return;
 						field.setAccessible(true);
 						field.set(ability, message.value);
 					} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
@@ -146,6 +147,7 @@ public class MessageUpdateAbilitySyncedValueToServer extends AbstractMessage<Mes
 					if(superClass.isAssignableFrom(ability.getClass())) {
 						try {
 							Field field = superClass.getDeclaredField(message.name);
+							if(field.isAnnotationPresent(AbilitySyncedValue.OnlyChangableForServer.class) || field.isAnnotationPresent(AbilitySyncedValue.UnchangeableValue.class)) return;
 							field.setAccessible(true);
 							field.set(ability, message.value);
 						} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
