@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class ConfigHandler {
 	public static Stats STATS = new Stats();
 	public static class Stats {
-		@Config.Name("Max LV")
+		@Config.Name("Max Level")
 		@Config.RangeInt(min = 1, max = 999)
 		public short maxLevel = 20;
 		
