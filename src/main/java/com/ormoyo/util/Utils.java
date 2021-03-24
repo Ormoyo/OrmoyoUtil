@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -190,6 +191,21 @@ public class Utils {
 		double dz = entity.posZ - vec.z;
         return Math.atan2((entity.posY + entity.getEyeHeight()) - vec.y, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI;
     }
+    
+	public float getYawFromFacing(EnumFacing facing) {
+		switch(facing) {
+		case NORTH:
+			return 0;
+		case EAST:
+			return 90;
+		case SOUTH:
+			return 180;
+		case WEST:
+			return 270;
+		default:
+			throw new IllegalStateException("Unable to get yaw from facing " + facing);
+		}
+	}
     
 	public static boolean doesBlockHaveCollison(World world, BlockPos pos) {
 		return world.getBlockState(pos).getCollisionBoundingBox(world, pos) != Block.NULL_AABB;

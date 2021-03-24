@@ -4,13 +4,10 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
 
-import org.lwjgl.input.Keyboard;
-
 import com.ormoyo.util.OrmoyoUtil;
 import com.ormoyo.util.event.AbilityEvent;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -21,16 +18,19 @@ import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent;
 import net.minecraftforge.client.event.InputUpdateEvent;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent.MouseInputEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -98,6 +98,18 @@ public abstract class Ability {
 	@SideOnly(Side.CLIENT)
 	public void onPostRenderOverlayEvent(RenderGameOverlayEvent.Post event) {}
 	/**
+	 * Called when a {@link RenderPlayerEvent.Pre} involving the ability owner occured
+	 * @apiNote Called even if first person
+	 */
+	@SideOnly(Side.CLIENT)
+	public void onPrePlayerRender(RenderPlayerEvent.Pre event) {}
+	/**
+	 * Called when a {@link RenderPlayerEvent.Post} involving the ability owner occured
+	 * @apiNote Called even if first person
+	 */
+	@SideOnly(Side.CLIENT)
+	public void onPostPlayerRender(RenderPlayerEvent.Post event) {}
+	/**
 	 * Called when a {@link ActionPerformedEvent} involving the ability owner occurred i.e. the owner has clicked a button in a gui
 	 */
 	@SideOnly(Side.CLIENT)
@@ -107,6 +119,21 @@ public abstract class Ability {
 	 */
 	@SideOnly(Side.CLIENT)
 	public void onInputUpdate(InputUpdateEvent event) {}
+	/**
+	 * Called when a mouse input from the ability owner occurred
+	 */
+	@SideOnly(Side.CLIENT)
+	public void onMouseEvent(MouseEvent event) {}
+	/**
+	 * Basically {@linkplain #onMouseEvent(MouseEvent)} but called after it
+	 */
+	@SideOnly(Side.CLIENT)
+	public void onMouseInput(MouseInputEvent event) {}
+	/**
+	 * Called when a key input from the ability owner occurred
+	 */
+	@SideOnly(Side.CLIENT)
+	public void onKeyInput(KeyInputEvent event) {}
 	/**
 	 * Called when a {@link CameraSetup} involving the ability owner camera occurred
 	 */

@@ -15,12 +15,15 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.InputUpdateEvent;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent.MouseInputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.RenderTickEvent;
@@ -86,7 +89,20 @@ public class ClientEventHandler {
 	
 	@SubscribeEvent
 	public static void onPlayerRender(RenderPlayerEvent.Pre event) {
-		
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
+			if(ability.isEnabled()) {
+				ability.onPrePlayerRender(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onPlayerRender(RenderPlayerEvent.Post event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
+			if(ability.isEnabled()) {
+				ability.onPostPlayerRender(event);
+			}
+		}
 	}
 	
 	@SubscribeEvent
@@ -112,6 +128,33 @@ public class ClientEventHandler {
 		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
 			if(ability.isEnabled()) {
 				ability.onCameraUpdate(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onMouseEvent(MouseEvent event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
+			if(ability.isEnabled()) {
+				ability.onMouseEvent(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onMouseEvent(MouseInputEvent event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
+			if(ability.isEnabled()) {
+				ability.onMouseInput(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onKeyInput(KeyInputEvent event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
+			if(ability.isEnabled()) {
+				ability.onKeyInput(event);
 			}
 		}
 	}
