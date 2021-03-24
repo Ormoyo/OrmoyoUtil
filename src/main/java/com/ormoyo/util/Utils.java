@@ -192,7 +192,7 @@ public class Utils {
         return Math.atan2((entity.posY + entity.getEyeHeight()) - vec.y, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI;
     }
     
-	public float getYawFromFacing(EnumFacing facing) {
+	public static float getYawFromFacing(EnumFacing facing) {
 		switch(facing) {
 		case NORTH:
 			return 0;
