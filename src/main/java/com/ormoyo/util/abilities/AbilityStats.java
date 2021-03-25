@@ -7,6 +7,8 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import com.google.common.collect.Maps;
 import com.ormoyo.util.Utils;
+import com.ormoyo.util.abilities.AbilitySyncedValue.OnlyChangableForServer;
+import com.ormoyo.util.abilities.AbilitySyncedValue.OnlyInvokableForServer;
 import com.ormoyo.util.config.ConfigHandler;
 import com.ormoyo.util.event.StatsEvent;
 
@@ -20,9 +22,12 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 public class AbilityStats extends Ability {
-	private short LV = 1;
-	private int EXP;
-	private int requiredEXP = 10;
+	@OnlyChangableForServer
+	private short level = 1;
+	@OnlyChangableForServer
+	private int exp;
+	@OnlyChangableForServer
+	private int requiredExp = 10;
 	
 	public AbilityStats(EntityPlayer owner) {
 		super(owner);
@@ -31,15 +36,15 @@ public class AbilityStats extends Ability {
 	@Override
 	public void onUpdate() {
 		super.onUpdate();
-		if(this.EXP >= this.requiredEXP) {
+		if(this.exp >= this.requiredExp) {
 			StatsEvent.LVIncreaseEvent event = new StatsEvent.LVIncreaseEvent(this.owner, this);
 			if(MinecraftForge.EVENT_BUS.post(event)) return;
-			this.setEXP(MathHelper.clamp(this.EXP - this.requiredEXP, 0, Integer.MAX_VALUE));
-			this.setLevel((short) (this.LV + event.getLVIncrease()));
+			this.setEXP(MathHelper.clamp(this.exp - this.requiredExp, 0, Integer.MAX_VALUE));
+			this.setLevel((short) (this.level + event.getLVIncrease()));
 		}
 	}
 	
-	private static Map<Class<? extends EntityLivingBase>, Integer> entityToExp = Maps.newHashMap();
+	private static final Map<Class<? extends EntityLivingBase>, Integer> entityToExp = Maps.newHashMap();
 	
 	@Override
 	public void onDeathEvent(LivingDeathEvent event) {
@@ -68,21 +73,21 @@ public class AbilityStats extends Ability {
 				switch(this.owner.world.getDifficulty()) {
 				case EASY:
 					if(this.owner.getRNG().nextDouble() > 0.01) {
-						this.setEXP(this.EXP + exp);
+						this.setEXP(this.exp + exp);
 					}
 					break;
 				case NORMAL:
 					if(this.owner.getRNG().nextDouble() > 0.1) {
-						this.setEXP(this.EXP + exp);
+						this.setEXP(this.exp + exp);
 					}
 					break;
 				case HARD:
 					if(this.owner.getRNG().nextDouble() > 0.5) {
-						this.setEXP(this.EXP + exp);
+						this.setEXP(this.exp + exp);
 					}
 					break;
 				case PEACEFUL:
-					this.setEXP(this.EXP + exp);
+					this.setEXP(this.exp + exp);
 					break;
 				}
 			}
@@ -91,9 +96,9 @@ public class AbilityStats extends Ability {
 	
 	@Override
 	public void writeToNBT(NBTTagCompound compound) {
-		compound.setShort("LV", this.LV);
-		compound.setInteger("EXP", this.EXP);
-		compound.setInteger("requiredEXP", this.requiredEXP);
+		compound.setShort("LV", this.level);
+		compound.setInteger("EXP", this.exp);
+		compound.setInteger("requiredEXP", this.requiredExp);
 	}
 	
 	@Override
@@ -103,10 +108,10 @@ public class AbilityStats extends Ability {
 		this.setRequiredEXP(compound.getInteger("requiredEXP"));
 	}
 	
-	public void setLevel(short LV) {
-		if(this.owner.world.isRemote) return;
-		this.LV = (short) MathHelper.clamp(LV, 1, ConfigHandler.STATS.maxLevel);
-		AbilitySyncedValue.setValue(this, "LV", (short)MathHelper.clamp(LV, 1, ConfigHandler.STATS.maxLevel));
+	@OnlyInvokableForServer
+	public void setLevel(short level) {
+		this.level = (short) MathHelper.clamp(level, 1, ConfigHandler.STATS.maxLevel);
+		AbilitySyncedValue.setValue(this, "level", (short)MathHelper.clamp(level, 1, ConfigHandler.STATS.maxLevel));
 		int multiplayer = 1;
 		switch(this.owner.world.getDifficulty()) {
 		case EASY:
@@ -122,31 +127,31 @@ public class AbilityStats extends Ability {
 			multiplayer = 1;
 			break;
 		}
-		this.setRequiredEXP(this.requiredEXP + Utils.randomInt(MathHelper.clamp(multiplayer * this.LV, this.LV, Integer.MAX_VALUE - 1), Integer.MAX_VALUE, this.owner.getRNG()));
+		this.setRequiredEXP(this.requiredExp + Utils.randomInt(this.level, MathHelper.clamp(multiplayer * this.level, this.level, Integer.MAX_VALUE - 1), this.owner.getRNG()));
 	}
 	
 	public short getLV() {
-		return this.LV;
+		return this.level;
 	}
 	
+	@OnlyInvokableForServer
 	public void setEXP(int EXP) {
-		if(this.owner.world.isRemote) return;
-		this.EXP = EXP;
+		this.exp = EXP;
 		AbilitySyncedValue.setValue(this, "EXP", EXP);
 	}
 	
 	public int getEXP() {
-		return this.EXP;
+		return this.exp;
 	}
 	
+	@OnlyInvokableForServer
 	public void setRequiredEXP(int requiredEXP) {
-		if(this.owner.world.isRemote) return;
-		this.requiredEXP = requiredEXP;
+		this.requiredExp = requiredEXP;
 		AbilitySyncedValue.setValue(this, "requiredEXP", requiredEXP);
 	}
 	
 	public int getRequiredEXP() {
-		return this.requiredEXP;
+		return this.requiredExp;
 	}
 	
 	@Override

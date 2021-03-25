@@ -107,7 +107,6 @@ public class AbilitySyncedValue {
 		event.getRegistry().register(new AbilitySyncedValueParserEntry(Vec3d.class, Parsers.VEC3D, new ResourceLocation(OrmoyoUtil.MODID, "vec3d")));
 		event.getRegistry().register(new AbilitySyncedValueParserEntry(Vec3i.class, Parsers.VEC3I, new ResourceLocation(OrmoyoUtil.MODID, "vec3i")));
 		event.getRegistry().register(new AbilitySyncedValueParserEntry(DamageSource.class, Parsers.DAMAGE_SOURCE, new ResourceLocation(OrmoyoUtil.MODID, "damage_source")));
-		event.getRegistry().register(new AbilitySyncedValueParserEntry(LivingAttackEvent.class, Parsers.LIVING_ATTACK_EVENT, new ResourceLocation(OrmoyoUtil.MODID, "living_attack_event")));
 	}
 	
 	public static interface ISyncedValueParser<T> {
@@ -370,12 +369,18 @@ public class AbilitySyncedValue {
 				writer.writeBoolean(value.isDamageAbsolute());
 				writer.writeBoolean(value.canHarmInCreative());
 				if(value instanceof EntityDamageSource) {
-					writer.writeBoolean(true);
-					ENTITY.write(writer, player, value.getTrueSource());
-					if(value instanceof EntityDamageSourceIndirect) {
-						if(value.getTrueSource() != null) {
-							writer.writeBoolean(true);
-							ENTITY.write(writer, player, value.getImmediateSource());
+					if(value.getTrueSource() != null) {
+						writer.writeBoolean(true);
+						ENTITY.write(writer, player, value.getTrueSource());
+						if(value instanceof EntityDamageSourceIndirect) {
+							if(value.getImmediateSource() != null) {
+								writer.writeBoolean(true);
+								ENTITY.write(writer, player, value.getImmediateSource());
+							}else {
+								writer.writeBoolean(false);
+							}
+						}else {
+							writer.writeBoolean(false);
 						}
 					}else {
 						writer.writeBoolean(false);
@@ -423,20 +428,6 @@ public class AbilitySyncedValue {
 				return source;
 			}
 		};
-		
-		public static final ISyncedValueParser<LivingAttackEvent> LIVING_ATTACK_EVENT = new ISyncedValueParser<LivingAttackEvent>() {
-			@Override
-			public void write(Writer writer, EntityPlayer player, LivingAttackEvent value) {
-				ENTITY.write(writer, player, value.getEntityLiving());
-				DAMAGE_SOURCE.write(writer, player, value.getSource());
-				writer.writeFloat(value.getAmount());
-			}
-
-			@Override
-			public LivingAttackEvent read(Reader reader, EntityPlayer player) {
-				return new LivingAttackEvent((EntityLivingBase) ENTITY.read(reader, player), DAMAGE_SOURCE.read(reader, player), reader.readFloat());
-			}
-		};
 	}
 	
 	public static class AbilitySyncedValueParserEntry extends Impl<AbilitySyncedValueParserEntry> {
@@ -460,21 +451,39 @@ public class AbilitySyncedValue {
 	}
 	
 	/**
-	 *If a field has this annotation only the server can change the field value for the client
+	 * If a field has this annotation only the server can change the field value for the client
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	public static @interface OnlyChangableForServer {}
 	/**
-	 *If a field has this annotation only the client can change the field value for the server
+	 * If a field has this annotation only the client can change the field value for the server
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	public static @interface OnlyChangableForClient {}
 	/**
-	 *If a field has this annotation cannot change his value through {@link AbilitySyncedValue}
+	 * If a field has this annotation cannot change his value through {@link AbilitySyncedValue}
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	public static @interface UnchangeableValue {}
+	/**
+	 * If a method has this annotation only the server can invoke the method for the client
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public static @interface OnlyInvokableForServer {}
+	/**
+	 * If a method has this annotation only the client can invoke the method for the server
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public static @interface OnlyInvokableForClient {}
+	/**
+	 * If a method has this annotation cannot invoke the method through {@link AbilitySyncedValue}
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public static @interface UninvokableMethod {}
 }

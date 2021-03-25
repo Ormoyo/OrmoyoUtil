@@ -26,7 +26,9 @@ import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -160,6 +162,69 @@ public class CommonEventHandler {
 				if(ability.isEnabled()) {
 					ability.onKnockBackEvent(event);
 				}
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onAttackEntity(AttackEntityEvent event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
+			if(ability.isEnabled()) {
+				ability.onAttackEntity(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
+			if(ability.isEnabled()) {
+				ability.onEntityInteractSpecificEvent(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteract event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
+			if(ability.isEnabled()) {
+				ability.onEntityInteractEvent(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onBlockLeftClick(PlayerInteractEvent.LeftClickBlock event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
+			if(ability.isEnabled()) {
+				ability.onBlockLeftClick(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onBlockRightClick(PlayerInteractEvent.RightClickBlock event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
+			if(ability.isEnabled()) {
+				ability.onBlockRightClick(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onEmptyLeftClick(PlayerInteractEvent.LeftClickEmpty event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
+			if(ability.isEnabled()) {
+				ability.onEmptyLeftClick(event);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onEmptyRightClick(PlayerInteractEvent.RightClickEmpty event) {
+		for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
+			if(ability.isEnabled()) {
+				ability.onEmptyRightClick(event);
 			}
 		}
 	}

@@ -66,11 +66,11 @@ public class Utils {
 	
 	public static int randomInt(int min, int max) {
         Random r = new Random();
-        return (int) (min + Math.round(r.nextDouble() * ((max - min) + 1)));
+        return min + (int) (r.nextDouble() * ((max - min) + 1));
 	}
 	
 	public static int randomInt(int min, int max, Random random) {
-		return (int) (min + Math.round(random.nextDouble() * ((max - min) + 1)));
+		return  min + (int) (random.nextDouble() * ((max - min) + 1));
 	}
 	
 	public static double randomDouble(double min, double max) {
@@ -146,7 +146,7 @@ public class Utils {
 			Map<Double, EntityLivingBase> distances = Maps.newHashMap();
 			for(EntityLivingBase hit : result.entities) {
 				if(hit == entity) continue;
-				distances.put(entity.getDistance(hit.posX, hit.posY, hit.posZ), hit);
+				distances.put((double)entity.getDistance(hit), hit);
 			}
 			if(!distances.isEmpty()) {
 				return distances.get(Collections.min(distances.keySet()));

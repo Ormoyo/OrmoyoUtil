@@ -123,7 +123,8 @@ public class MessageInvokeMethodOnServer extends AbstractMessage<MessageInvokeMe
 						for(int i = 0; i < message.args.length; i++) {
 							array[i] = message.args[i].getClass();
 						}
-						Method method = ability.getClass().getMethod(message.methodName, array);
+						Method method = ability.getClass().getDeclaredMethod(message.methodName, array);
+						if(method.isAnnotationPresent(AbilitySyncedValue.OnlyInvokableForServer.class) || method.isAnnotationPresent(AbilitySyncedValue.UninvokableMethod.class)) return;
 						method.setAccessible(true);
 						method.invoke(ability, message.args);
 					} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {

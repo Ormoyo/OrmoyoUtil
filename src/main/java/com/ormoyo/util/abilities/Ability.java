@@ -27,6 +27,8 @@ import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent;
@@ -70,6 +72,7 @@ public abstract class Ability {
 	 * Called when a {@link LivingAttackEvent} related to the ability owner occurred i.e. the owner attacked or has been attacked by an entity
 	 */
 	public void onAttackEvent(LivingAttackEvent event) {}
+	public void onAttackEntity(AttackEntityEvent event) {}
 	/**
 	 * Called when a {@link LivingKnockBackEvent} related to the ability owner occurred i.e. the owner got knocked back or has knocked back an entity
 	 */
@@ -82,6 +85,13 @@ public abstract class Ability {
 	 * Called when a {@link LivingDeathEvent} involving to the ability owner occurred i.e. the owner died or has killed an entity
 	 */
 	public void onDeathEvent(LivingDeathEvent event) {}
+	
+	public void onEntityInteractSpecificEvent(PlayerInteractEvent.EntityInteractSpecific event) {}
+	public void onEntityInteractEvent(PlayerInteractEvent.EntityInteract event) {}
+	public void onBlockLeftClick(PlayerInteractEvent.LeftClickBlock event) {}
+	public void onBlockRightClick(PlayerInteractEvent.RightClickBlock event) {}
+	public void onEmptyLeftClick(PlayerInteractEvent.LeftClickEmpty event) {}
+	public void onEmptyRightClick(PlayerInteractEvent.RightClickEmpty event) {}
 	/**
 	 * Called every frame
 	 */
