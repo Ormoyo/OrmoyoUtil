@@ -42,12 +42,18 @@ public class RenderHelper {
 		double maxV = (double)(v + height) / (double)imageHeight;
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
+		if(color.getAlpha() < 1 && color.getAlpha() > 0) {
+			setupOpacity();
+		}
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 		buffer.pos(x + scale*(double)width, y + scale*(double)height, 0).tex(maxU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
 		buffer.pos(x + scale*(double)width, y, 0).tex(maxU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
 		buffer.pos(x, y, 0).tex(minU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
 		buffer.pos(x, y + scale*(double)height, 0).tex(minU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
 		tessellator.draw();
+		if(color.getAlpha() < 1 && color.getAlpha() > 0) {
+			revertOpacity();
+		}
 	}
 	
 	public static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY) {
@@ -101,6 +107,9 @@ public class RenderHelper {
 		setupOpacity();
 		Minecraft.getMinecraft().renderEngine.bindTexture(WHITE);
 		int opacity = 80;
+		if(color.getAlpha() < 1 && color.getAlpha() > 0) {
+			opacity = color.getAlpha();
+		}
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
