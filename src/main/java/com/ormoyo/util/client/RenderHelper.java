@@ -56,6 +56,22 @@ public class RenderHelper {
 		}
 	}
 	
+	public static void drawTexturedRectWithoutBlend(ResourceLocation texture, double x, double y, int u, int v, int width, int height, int imageWidth, int imageHeight, double scale, Color color) {
+		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
+		double minU = (double)u / (double)imageWidth;
+		double maxU = (double)(u + width) / (double)imageWidth;
+		double minV = (double)v / (double)imageHeight;
+		double maxV = (double)(v + height) / (double)imageHeight;
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder buffer = tessellator.getBuffer();
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+		buffer.pos(x + scale*(double)width, y + scale*(double)height, 0).tex(maxU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x + scale*(double)width, y, 0).tex(maxU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x, y, 0).tex(minU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x, y + scale*(double)height, 0).tex(minU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		tessellator.draw();
+	}
+	
 	public static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY) {
 		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
 		double minU = (double)u / (double)imageWidth;
