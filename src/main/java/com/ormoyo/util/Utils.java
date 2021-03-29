@@ -41,7 +41,7 @@ public class Utils {
 		if(event.phase == Phase.END) {
 			for (Iterator<ITickable> iterator = set.iterator(); iterator.hasNext();) {
 			    ITickable tickable = iterator.next();
-			    tickable.onUpdate();
+			    tickable.onUpdate(iterator);
 			}
 		}
 	}
@@ -286,20 +286,20 @@ public class Utils {
 		}
 		
 		@Override
-		public void onUpdate() {
+		public void onUpdate(Iterator<ITickable> iterator) {
 			this.tick++;
 			this.tick %= this.maxTick;
 			if(this.tick == 0) {
 				this.consumer.accept(this.consumerValue);
 				this.performAmount--;
 				if(this.performAmount <= 0) {
-					set.iterator().remove();
+					iterator.remove();
 				}
 			}
 		}
 	}
 	
 	public static interface ITickable {
-		void onUpdate();
+		void onUpdate(Iterator<ITickable> iterator);
 	}
 }
