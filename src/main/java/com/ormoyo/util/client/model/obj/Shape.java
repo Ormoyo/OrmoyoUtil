@@ -97,10 +97,8 @@ public class Shape {
     	ResourceLocation prevTexture = null;
     	Tessellator tess = Tessellator.getInstance();
     	BufferBuilder bb = tess.getBuffer();
+    	RenderHelper.setupOpacity();
     	for(Face face : this.faceList) {
-    		if(face.getMaterial().getColor().w < 1 && face.getMaterial().getColor().w > 0) {
-    			RenderHelper.setupOpacity();
-    		}
     		if(face.getMaterial().getTexture() != null && !face.getMaterial().getTexture().equals(prevTexture)) {
     			Minecraft.getMinecraft().getTextureManager().bindTexture(face.getMaterial().getTexture());
     			prevTexture = face.getMaterial().getTexture();
@@ -113,10 +111,8 @@ public class Shape {
     			bb.pos(vertex.getPosition().x * scale, vertex.getPosition().y * scale, vertex.getPosition().z * scale).tex(coords.getCoords().x, coords.getCoords().y).color(face.getMaterial().getColor().x, face.getMaterial().getColor().y, face.getMaterial().getColor().z, face.getMaterial().getColor().w).normal(normal.getVector().x, normal.getVector().y, normal.getVector().z).endVertex();
     		}
     		tess.draw();
-    		if(face.getMaterial().getColor().w < 1 && face.getMaterial().getColor().w > 0) {
-    			RenderHelper.revertOpacity();
-    		}
     	}
+    	RenderHelper.revertOpacity();
     }
     
     public String getName() {

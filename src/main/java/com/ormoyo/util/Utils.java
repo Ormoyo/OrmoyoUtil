@@ -3,6 +3,7 @@ package com.ormoyo.util;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -38,8 +39,9 @@ public class Utils {
 	@SubscribeEvent
 	public static void onPlayerTickEvent(TickEvent.WorldTickEvent event) {
 		if(event.phase == Phase.END) {
-			for(ITickable tickable : set) {
-				tickable.onUpdate();
+			for (Iterator<ITickable> iterator = set.iterator(); iterator.hasNext();) {
+			    ITickable tickable = iterator.next();
+			    tickable.onUpdate();
 			}
 		}
 	}
@@ -291,7 +293,7 @@ public class Utils {
 				this.consumer.accept(this.consumerValue);
 				this.performAmount--;
 				if(this.performAmount <= 0) {
-					set.remove(this);
+					set.iterator().remove();
 				}
 			}
 		}
