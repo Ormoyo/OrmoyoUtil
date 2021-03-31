@@ -68,6 +68,17 @@ public class PlayerData implements IPlayerData {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T extends Ability> T getUnlockedAbility(Class<T> clazz) {
+		for(Ability ability : unlockedAbilities) {
+			if(ability.getEntry().getRegistryName().equals(Ability.getAbilityClassRegistryName(clazz))) {
+				return (T) ability;
+			}
+		}
+		return null;
+	}
+	
 	public Set<Ability> getUnlockedAbilities(){
 		return Collections.unmodifiableSet(unlockedAbilities);
 	}

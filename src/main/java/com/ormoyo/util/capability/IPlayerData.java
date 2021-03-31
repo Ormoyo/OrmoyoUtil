@@ -12,6 +12,7 @@ public interface IPlayerData {
 	boolean isAbilityUnlocked(Ability ability);
 	boolean isAbilityUnlocked(ResourceLocation name);
 	Ability getUnlockedAbility(ResourceLocation name);
+	<T extends Ability>T getUnlockedAbility(Class<T> clazz);
 	Set<Ability> getUnlockedAbilities();
 	AbilityStats getStats();
 }

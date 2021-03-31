@@ -78,8 +78,9 @@ public class ClientProxy extends CommonProxy {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	public Ability getUnlockedAbility(EntityPlayer player, Class<? extends Ability> clazz) {
+	public<T extends Ability> T getUnlockedAbility(EntityPlayer player, Class<T> clazz) {
 		if(player != null) {
 			if(!player.world.isRemote) {
 				return super.getUnlockedAbility(player, clazz);
@@ -87,7 +88,7 @@ public class ClientProxy extends CommonProxy {
 		}
 		for(Ability ability : unlockedAbilities) {
 			if(ability.getEntry().getRegistryName().equals(Ability.getAbilityClassRegistryName(clazz))) {
-				return ability;
+				return (T) ability;
 			}
 		}
 		return null;

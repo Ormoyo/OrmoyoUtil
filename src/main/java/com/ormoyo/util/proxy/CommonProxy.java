@@ -51,9 +51,9 @@ public class CommonProxy {
 		return null;
 	}
 	
-	public Ability getUnlockedAbility(EntityPlayer player, Class<? extends Ability> clazz) {
+	public<T extends Ability> T getUnlockedAbility(EntityPlayer player, Class<T> clazz) {
 		if(player != null) {
-			return player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null).getUnlockedAbility(Ability.getAbilityClassRegistryName(clazz));
+			return player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null).getUnlockedAbility(clazz);
 		}
 		return null;
 	}

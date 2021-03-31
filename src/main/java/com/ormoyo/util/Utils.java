@@ -25,6 +25,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -34,15 +36,44 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @EventBusSubscriber(modid = OrmoyoUtil.MODID)
 public class Utils {
-	private static final Set<ITickable> set = Sets.newHashSet();
+	private static final Set<ITickable> tickables = Sets.newHashSet();
+	private static final Set<Animation> animations = Sets.newHashSet();
 	
 	@SubscribeEvent
 	public static void onPlayerTickEvent(TickEvent.WorldTickEvent event) {
 		if(event.phase == Phase.END) {
-			for (Iterator<ITickable> iterator = set.iterator(); iterator.hasNext();) {
+			for(Iterator<ITickable> iterator = tickables.iterator(); iterator.hasNext();) {
 			    ITickable tickable = iterator.next();
 			    tickable.onUpdate(iterator);
 			}
+			for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
+				Animation anim = iterator.next();
+				anim.onUpdate(iterator);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
+		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
+			Animation anim = iterator.next();
+			anim.renderPre2D(event);
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
+		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
+			Animation anim = iterator.next();
+			anim.renderPost2D(event);
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onRenderWorld(RenderWorldLastEvent event) {
+		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
+			Animation anim = iterator.next();
+			anim.render3D(event);
 		}
 	}
 	/**
@@ -63,7 +94,11 @@ public class Utils {
 	 * @param performAmount The amount of times to perform
 	 */
 	public static<T> void performConsumerAfterAmountOfTicks(Consumer<T> consumer, T consumerValue, int tickAmount, int performAmount) {
-		set.add(new ConsumerPerform<T>(consumer, consumerValue, tickAmount, performAmount));
+		tickables.add(new ConsumerPerform<T>(consumer, consumerValue, tickAmount, performAmount));
+	}
+	
+	public static<T> void performAnimation(Animation animation) {
+		animations.add(animation);
 	}
 	
 	public static int randomInt(int min, int max) {
@@ -286,7 +321,7 @@ public class Utils {
 		}
 		
 		@Override
-		public void onUpdate(Iterator<ITickable> iterator) {
+		public void onUpdate(Iterator<? extends ITickable> iterator) {
 			this.tick++;
 			this.tick %= this.maxTick;
 			if(this.tick == 0) {
@@ -300,6 +335,29 @@ public class Utils {
 	}
 	
 	public static interface ITickable {
-		void onUpdate(Iterator<ITickable> iterator);
+		void onUpdate(Iterator<? extends ITickable> iterator);
+	}
+	
+	public static class Animation implements ITickable {
+		public int ticksExisted;
+		private Iterator<? extends ITickable> iterator;
+		public void renderPre2D(RenderGameOverlayEvent.Pre event) {}
+		public void renderPost2D(RenderGameOverlayEvent.Post event) {}
+		public void render3D(RenderWorldLastEvent event) {}
+		
+		@Override
+		public final void onUpdate(Iterator<? extends ITickable> iterator) {
+			this.ticksExisted++;
+			if(this.ticksExisted == 1) {
+				this.iterator = iterator;
+			}
+			this.onUpdate();
+		}
+		
+		public void onUpdate() {}
+		
+		public final void remove() {
+			this.iterator.remove();
+		}
 	}
 }
