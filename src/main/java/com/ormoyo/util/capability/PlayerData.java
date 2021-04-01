@@ -29,7 +29,6 @@ public class PlayerData implements IPlayerData {
 	public boolean UnlockAbility(Ability ability) {
 		if(this.isAbilityUnlocked(ability)) return false;
 		if(MinecraftForge.EVENT_BUS.post(new AbilityEvent.OnAbilityUnlockedEvent(player, ability))) return false;
-		
 		if(this.unlockedAbilities.add(ability)) {
 			this.termUnlockedAbilities.add(ability.getEntry().getRegistryName());
 			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageSetClientAbilityList(ability), (EntityPlayerMP)player);

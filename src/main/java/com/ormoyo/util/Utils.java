@@ -54,6 +54,7 @@ public class Utils {
 	}
 	
 	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
 	public static void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
 		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
 			Animation anim = iterator.next();
@@ -62,6 +63,7 @@ public class Utils {
 	}
 	
 	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
 	public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
 		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
 			Animation anim = iterator.next();
@@ -70,6 +72,7 @@ public class Utils {
 	}
 	
 	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
 	public static void onRenderWorld(RenderWorldLastEvent event) {
 		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
 			Animation anim = iterator.next();
@@ -341,16 +344,17 @@ public class Utils {
 	public static class Animation implements ITickable {
 		public int ticksExisted;
 		private Iterator<? extends ITickable> iterator;
+		@SideOnly(Side.CLIENT)
 		public void renderPre2D(RenderGameOverlayEvent.Pre event) {}
+		@SideOnly(Side.CLIENT)
 		public void renderPost2D(RenderGameOverlayEvent.Post event) {}
+		@SideOnly(Side.CLIENT)
 		public void render3D(RenderWorldLastEvent event) {}
 		
 		@Override
 		public final void onUpdate(Iterator<? extends ITickable> iterator) {
 			this.ticksExisted++;
-			if(this.ticksExisted == 1) {
-				this.iterator = iterator;
-			}
+			this.iterator = iterator;
 			this.onUpdate();
 		}
 		
