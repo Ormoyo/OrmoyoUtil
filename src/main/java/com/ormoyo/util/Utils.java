@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -39,7 +40,7 @@ public class Utils {
 	private static final Set<ITickable> tickables = Sets.newHashSet();
 	private static final Set<Animation> animations = Sets.newHashSet();
 	
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.LOW)
 	public static void onPlayerTickEvent(TickEvent.WorldTickEvent event) {
 		if(event.phase == Phase.END) {
 			for(Iterator<ITickable> iterator = tickables.iterator(); iterator.hasNext();) {
@@ -53,7 +54,7 @@ public class Utils {
 		}
 	}
 	
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.LOW)
 	@SideOnly(Side.CLIENT)
 	public static void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
 		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
@@ -71,7 +72,7 @@ public class Utils {
 		}
 	}
 	
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.LOW)
 	@SideOnly(Side.CLIENT)
 	public static void onRenderWorld(RenderWorldLastEvent event) {
 		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
