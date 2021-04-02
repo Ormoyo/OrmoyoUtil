@@ -63,7 +63,7 @@ public class Utils {
 		}
 	}
 	
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.LOW)
 	@SideOnly(Side.CLIENT)
 	public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
 		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
