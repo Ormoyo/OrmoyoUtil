@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
@@ -32,6 +31,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -57,29 +57,34 @@ public class Utils {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	@SideOnly(Side.CLIENT)
 	public static void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
-		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
-			Animation anim = iterator.next();
-			anim.renderPre2D(event);
+		for(Animation animation : animations) {
+			animation.renderPre2D(event);
 		}
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOW)
 	@SideOnly(Side.CLIENT)
 	public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
-			Animation anim = iterator.next();
-			anim.renderPost2D(event);
+		for(Animation animation : animations) {
+			animation.renderPost2D(event);
 		}
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOW)
 	@SideOnly(Side.CLIENT)
 	public static void onRenderWorld(RenderWorldLastEvent event) {
-		for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
-			Animation anim = iterator.next();
-			anim.render3D(event);
+		for(Animation animation : animations) {
+			animation.render3D(event);
 		}
 	}
+	
+	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
+	public static void onDisconnectionFromServer(ClientDisconnectionFromServerEvent event) {
+		tickables.clear();
+		animations.clear();
+	}
+	
 	/**
 	 * Performs a consumer after amount of ticks
 	 * @param consumer The consumer to perform
