@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
 import com.ormoyo.ormoyoutil.capability.CapabilityHandler;
 import com.ormoyo.ormoyoutil.capability.IAbiltyData;
-import com.ormoyo.ormoyoutil.client.render.RenderHelper;
+import com.ormoyo.ormoyoutil.client.RenderHelper;
 import com.ormoyo.ormoyoutil.capability.AbilityData;
 import com.ormoyo.ormoyoutil.event.AbilityEvent;
 import com.ormoyo.ormoyoutil.event.StatsEvent;

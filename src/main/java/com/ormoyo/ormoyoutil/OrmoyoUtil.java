@@ -3,7 +3,6 @@ package com.ormoyo.ormoyoutil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ormoyo.ormoyoutil.client.render.RenderHandler;
 import com.ormoyo.ormoyoutil.commands.CommandUnlockAbility;
 import com.ormoyo.ormoyoutil.network.MessageInvokeMethodOnClient;
 import com.ormoyo.ormoyoutil.network.MessageInvokeMethodOnServer;
@@ -15,6 +14,7 @@ import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueToServer;
 import com.ormoyo.ormoyoutil.network.NetworkHandler;
 import com.ormoyo.ormoyoutil.network.NetworkWrapper;
 import com.ormoyo.ormoyoutil.proxy.CommonProxy;
+import com.ormoyo.ormoyoutil.util.InjectRender;
 
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -50,7 +50,7 @@ public class OrmoyoUtil {
 	public static void PreInit(FMLPreInitializationEvent event) {
 		for(ModContainer mod : Loader.instance().getModList()) {
 			NetworkHandler.injectNetworkWrapper(mod, event.getAsmData());
-			RenderHandler.injectRender(mod, event.getAsmData());
+			InjectRender.Handler.injectRender(mod, event.getAsmData());
 		}
 		proxy.preInit();
 	}

@@ -9,7 +9,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import com.google.common.collect.Lists;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
-import com.ormoyo.ormoyoutil.client.render.RenderHelper;
+import com.ormoyo.ormoyoutil.client.RenderHelper;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;

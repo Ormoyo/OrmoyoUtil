@@ -12,7 +12,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.google.common.collect.Maps;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
-import com.ormoyo.ormoyoutil.client.render.RenderHelper;
+import com.ormoyo.ormoyoutil.client.RenderHelper;
 import com.ormoyo.ormoyoutil.event.FontRenderEvent;
 import com.ormoyo.ormoyoutil.util.Font;
 import com.ormoyo.ormoyoutil.util.Font.FontEntry;
