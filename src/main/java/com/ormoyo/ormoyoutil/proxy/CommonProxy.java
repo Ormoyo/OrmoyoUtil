@@ -73,4 +73,6 @@ public class CommonProxy {
 	public EntityPlayer getPlayerByUsername(String username) {
 		return FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUsername(username);
 	}
+	
+	public void openGui(Object gui) {}
 }

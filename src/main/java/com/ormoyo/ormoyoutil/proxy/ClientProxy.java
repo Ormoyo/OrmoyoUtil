@@ -21,6 +21,7 @@ import com.ormoyo.ormoyoutil.util.OrmoyoResourcePackListener;
 import com.ormoyo.ormoyoutil.util.OrmoyoResourceTypes;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
@@ -142,5 +143,12 @@ public class ClientProxy extends CommonProxy {
 			super.getPlayerByUsername(username);
 		}
 		return MINECRAFT.player;
+	}
+	
+	@Override
+	public void openGui(Object gui) {
+		if(gui instanceof GuiScreen) {
+			MINECRAFT.displayGuiScreen((GuiScreen)gui);
+		}
 	}
 }

@@ -85,6 +85,22 @@ public class RenderHelper {
 		tessellator.draw();
 	}
 	
+	private static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY, Color color) {
+		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
+		double minU = (double)u / (double)imageWidth;
+		double maxU = (double)(u + width) / (double)imageWidth;
+		double minV = (double)v / (double)imageHeight;
+		double maxV = (double)(v + height) / (double)imageHeight;
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder buffer = tessellator.getBuffer();
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+		buffer.pos(x + scaleX*(double)width, y + scaleY*(double)height, 0).tex(maxU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x + scaleX*(double)width, y, 0).tex(maxU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x, y, 0).tex(minU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x, y + scaleY*(double)height, 0).tex(minU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		tessellator.draw();
+	}
+	
 	public static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int uWidth, int vHeight, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY) {
 		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
 		double minU = (double)u / (double)imageWidth;
@@ -98,6 +114,22 @@ public class RenderHelper {
 		buffer.pos(x + scaleX*(double)width, y, 0).tex(maxU, minV).endVertex();
 		buffer.pos(x, y, 0).tex(minU, minV).endVertex();
 		buffer.pos(x, y + scaleY*(double)height, 0).tex(minU, maxV).endVertex();
+		tessellator.draw();
+	}
+	
+	private static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int uWidth, int vHeight, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY, Color color) {
+		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
+		double minU = (double)u / (double)imageWidth;
+		double maxU = (double)(u + uWidth) / (double)imageWidth;
+		double minV = (double)v / (double)imageHeight;
+		double maxV = (double)(v + vHeight) / (double)imageHeight;
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder buffer = tessellator.getBuffer();
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
+		buffer.pos(x + scaleX*(double)width, y + scaleY*(double)height, 0).tex(maxU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x + scaleX*(double)width, y, 0).tex(maxU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x, y, 0).tex(minU, minV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+		buffer.pos(x, y + scaleY*(double)height, 0).tex(minU, maxV).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
 		tessellator.draw();
 	}
 	
