@@ -85,7 +85,7 @@ public class RenderHelper {
 		tessellator.draw();
 	}
 	
-	private static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY, Color color) {
+	public static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY, Color color) {
 		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
 		double minU = (double)u / (double)imageWidth;
 		double maxU = (double)(u + width) / (double)imageWidth;
@@ -117,7 +117,7 @@ public class RenderHelper {
 		tessellator.draw();
 	}
 	
-	private static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int uWidth, int vHeight, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY, Color color) {
+	public static void drawTexturedRect(ResourceLocation texture, double x, double y, int u, int v, int uWidth, int vHeight, int width, int height, int imageWidth, int imageHeight, double scaleX, double scaleY, Color color) {
 		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
 		double minU = (double)u / (double)imageWidth;
 		double maxU = (double)(u + uWidth) / (double)imageWidth;

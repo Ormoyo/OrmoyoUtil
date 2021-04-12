@@ -20,6 +20,7 @@ import com.ormoyo.ormoyoutil.util.icon.Icon;
 import com.ormoyo.ormoyoutil.util.resourcelocation.AdvancedResourceLocation;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.ProgressManager;
@@ -122,6 +123,46 @@ public class FontHelper {
 		}finally {
 			IOUtils.closeQuietly(stream);
 		}
+	}
+	
+	public static FontRenderer createFontRendererFromFont(FontEntry font) {
+		FontRenderer renderer = new FontRenderer(null, null, null, false) {
+			@Override
+			public int drawString(String text, float x, float y, int color, boolean dropShadow) {
+		        int i;
+		        if (dropShadow)
+		        {
+		            i = this.renderString(text, x + 1.0F, y + 1.0F, color, true);
+		            i = Math.max(i, this.renderString(text, x, y, color, false));
+		        }
+		        else
+		        {
+		            i = this.renderString(text, x, y, color, false);
+		        }
+
+		        return i;
+			}
+			
+			private int renderString(String text, float x, float y, int color, boolean dropShadow) {
+	            if ((color & -67108864) == 0)
+	            {
+	                color |= -16777216;
+	            }
+	            
+	            if (dropShadow)
+	            {
+	                color = (color & 16579836) >> 2 | color & -16777216;
+	            }
+
+	            float red = (float)(color >> 16 & 255) / 255.0F;
+	            float blue = (float)(color >> 8 & 255) / 255.0F;
+	            float green = (float)(color & 255) / 255.0F;
+	            float alpha = (float)(color >> 24 & 255) / 255.0F;
+				FontHelper.drawString(text, x, y, 0.5, new Color(red, blue, green, alpha), font);
+				return (int) x;
+			}
+		};
+		return renderer;
 	}
 	
 	public static void drawString(String text, double posX, double posY, double scale, Color color, Font.FontEntry font) {
