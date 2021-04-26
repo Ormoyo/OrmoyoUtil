@@ -1,7 +1,6 @@
 package com.ormoyo.ormoyoutil.util;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Predicate;
 
 import com.ormoyo.ormoyoutil.client.font.FontHelper;
@@ -21,10 +20,10 @@ import net.minecraftforge.fml.common.ProgressManager.ProgressBar;
 public class OrmoyoResourcePackListener implements ISelectiveResourceReloadListener {
 	@Override
 	public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate) {
-		if(resourcePredicate.test(OrmoyoResourceTypes.OBJ_MODEL)) {
+		if(resourcePredicate.test(OrmoyoResourceTypes.OBJ_MODELS)) {
 			loadOBJModels();
 		}
-		if(resourcePredicate.test(OrmoyoResourceTypes.FONT)) {
+		if(resourcePredicate.test(OrmoyoResourceTypes.FONTS)) {
 			loadFonts();
 		}
 	}

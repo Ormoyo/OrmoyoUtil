@@ -122,7 +122,7 @@ public class MessageInvokeMethodOnClient extends AbstractMessage<MessageInvokeMe
 							array[i] = message.args[i].getClass();
 						}
 						Method method = ability.getClass().getDeclaredMethod(message.methodName, array);
-						if(method.isAnnotationPresent(AbilitySyncedValue.OnlyInvokableForClient.class) || method.isAnnotationPresent(AbilitySyncedValue.UninvokableMethod.class)) return;
+						if(method.isAnnotationPresent(AbilitySyncedValue.OnlyInvokableForClient.class) || !method.isAnnotationPresent(AbilitySyncedValue.InvokableMethod.class)) return;
 						method.setAccessible(true);
 						method.invoke(ability, message.args);
 					} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {

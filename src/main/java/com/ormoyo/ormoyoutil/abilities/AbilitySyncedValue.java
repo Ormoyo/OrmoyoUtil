@@ -447,41 +447,41 @@ public class AbilitySyncedValue {
 	}
 	
 	/**
-	 * If a field has this annotation only the server can change the field value for the client
+	 * If a field has this annotation only the server can change the field value through {@link AbilitySyncedValue} for the client
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	public static @interface OnlyChangableForServer {}
 	/**
-	 * If a field has this annotation only the client can change the field value for the server
+	 * If a field has this annotation only the client can change the field value through {@link AbilitySyncedValue} for the server
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	public static @interface OnlyChangableForClient {}
 	/**
-	 * If a field has this annotation cannot change his value through {@link AbilitySyncedValue}
+	 * If a field has this annotation {@link AbilitySyncedValue} can change his value
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
-	public static @interface UnchangeableValue {}
+	public static @interface ChangeableValue {}
 	/**
-	 * If a method has this annotation only the server can invoke the method for the client
+	 * If a method has this annotation only the server can invoke the method through {@link AbilitySyncedValue} for the client
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
 	public static @interface OnlyInvokableForServer {}
 	/**
-	 * If a method has this annotation only the client can invoke the method for the server
+	 * If a method has this annotation only the client can invoke the method through {@link AbilitySyncedValue} for the server
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
 	public static @interface OnlyInvokableForClient {}
 	/**
-	 * If a method has this annotation cannot invoke the method through {@link AbilitySyncedValue}
+	 * If a method has this annotation {@link AbilitySyncedValue} can invoke the method
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.METHOD)
-	public static @interface UninvokableMethod {}
+	public static @interface InvokableMethod {}
 	
 	@EventBusSubscriber(modid = OrmoyoUtil.MODID)
 	private static class EventHandler {

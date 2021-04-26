@@ -144,14 +144,30 @@ public class Utils {
 		return null;
 	}
 	
-	public static EntityLivingBase getEntityEntityLookingAt(EntityLivingBase entity, float reachDistance) {
+	public static Entity getEntityEntityLookingAt(EntityLivingBase entity, float reachDistance) {
 		Vec3d vec = getPosEntityLookingAt(entity, reachDistance);
-		EntityRayResult result = raytraceEntities(entity.world, new Vec3d(entity.posX, entity.posY + entity.getEyeHeight(), entity.posZ), vec, false, false, true);
+		EntityRayResult<Entity> result = raytraceEntities(entity.world, new Vec3d(entity.posX, entity.posY + entity.getEyeHeight(), entity.posZ), vec, false, false, true);
 		if(!result.entities.isEmpty()) {
-			Map<Double, EntityLivingBase> distances = Maps.newHashMap();
-			for(EntityLivingBase hit : result.entities) {
+			Map<Double, Entity> distances = Maps.newHashMap();
+			for(Entity hit : result.entities) {
 				if(hit == entity) continue;
 				distances.put((double)entity.getDistance(hit), hit);
+			}
+			if(!distances.isEmpty()) {
+				return distances.get(Collections.min(distances.keySet()));
+			}
+		}
+		return null;
+	}
+	
+	public static<T extends Entity> T getEntityEntityLookingAt(Class<T> classEntity, EntityLivingBase entity, float reachDistance) {
+		Vec3d vec = getPosEntityLookingAt(entity, reachDistance);
+		EntityRayResult<T> result = raytraceEntities(classEntity, entity.world, new Vec3d(entity.posX, entity.posY + entity.getEyeHeight(), entity.posZ), vec, false, false, true);
+		if(!result.entities.isEmpty()) {
+			Map<Double, T> distances = Maps.newHashMap();
+			for(T hit : result.entities) {
+				if(hit == entity) continue;
+				distances.put((double)entity.getDistance(hit), (T) hit);
 			}
 			if(!distances.isEmpty()) {
 				return distances.get(Collections.min(distances.keySet()));
@@ -227,8 +243,8 @@ public class Utils {
 		return world.getBlockState(pos).getCollisionBoundingBox(world, pos) != Block.NULL_AABB;
 	}
 	
-	public static EntityRayResult raytraceEntities(World world, Vec3d from, Vec3d to, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
-        EntityRayResult result = new EntityRayResult();
+	public static EntityRayResult<Entity> raytraceEntities(World world, Vec3d from, Vec3d to, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
+        EntityRayResult<Entity> result = new EntityRayResult<Entity>();
         result.setBlockHit(world.rayTraceBlocks(new Vec3d(from.x, from.y, from.z), to, stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock));
         double collidePosX;
         double collidePosY;
@@ -242,8 +258,37 @@ public class Utils {
             collidePosY = 30;
             collidePosZ = 30;
         }
-        List<EntityLivingBase> entities = world.getEntitiesWithinAABB(EntityLivingBase.class, new AxisAlignedBB(Math.min(from.x, collidePosX), Math.min(from.y, collidePosY), Math.min(from.z, collidePosZ), Math.max(from.x, collidePosX), Math.max(from.y, collidePosY), Math.max(from.z, collidePosZ)).grow(1, 1, 1));
-        for (EntityLivingBase entity : entities) {
+        List<Entity> entities = world.getEntitiesWithinAABB(Entity.class, new AxisAlignedBB(Math.min(from.x, collidePosX), Math.min(from.y, collidePosY), Math.min(from.z, collidePosZ), Math.max(from.x, collidePosX), Math.max(from.y, collidePosY), Math.max(from.z, collidePosZ)).grow(1, 1, 1));
+        for (Entity entity : entities) {
+            float pad = entity.getCollisionBorderSize() + 0.5f;
+            AxisAlignedBB aabb = entity.getEntityBoundingBox().grow(pad, pad, pad);
+            RayTraceResult hit = aabb.calculateIntercept(from, to);
+            if (aabb.contains(from)) {
+                result.addEntityHit(entity);
+            } else if (hit != null) {
+                result.addEntityHit(entity);
+            }
+        }
+        return result;
+	}
+	
+	public static<T extends Entity> EntityRayResult<T> raytraceEntities(Class<T> classEntity, World world, Vec3d from, Vec3d to, boolean stopOnLiquid, boolean ignoreBlockWithoutBoundingBox, boolean returnLastUncollidableBlock) {
+        EntityRayResult<T> result = new EntityRayResult<T>();
+        result.setBlockHit(world.rayTraceBlocks(new Vec3d(from.x, from.y, from.z), to, stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock));
+        double collidePosX;
+        double collidePosY;
+        double collidePosZ;
+        if (result.getBlockHit() != null) {
+            collidePosX = result.getBlockHit().hitVec.x;
+            collidePosY = result.getBlockHit().hitVec.y;
+            collidePosZ = result.getBlockHit().hitVec.z;
+        }else {
+            collidePosX = 30;
+            collidePosY = 30;
+            collidePosZ = 30;
+        }
+        List<T> entities = world.getEntitiesWithinAABB(classEntity, new AxisAlignedBB(Math.min(from.x, collidePosX), Math.min(from.y, collidePosY), Math.min(from.z, collidePosZ), Math.max(from.x, collidePosX), Math.max(from.y, collidePosY), Math.max(from.z, collidePosZ)).grow(1, 1, 1));
+        for (T entity : entities) {
             float pad = entity.getCollisionBorderSize() + 0.5f;
             AxisAlignedBB aabb = entity.getEntityBoundingBox().grow(pad, pad, pad);
             RayTraceResult hit = aabb.calculateIntercept(from, to);
@@ -256,10 +301,10 @@ public class Utils {
         return result;
 	}
 
-	public static class EntityRayResult {
+	public static class EntityRayResult<T extends Entity> {
         private RayTraceResult blockHit;
 
-        private List<EntityLivingBase> entities = new ArrayList<>();
+        private List<T> entities = new ArrayList<>();
 
         public RayTraceResult getBlockHit() {
             return blockHit;
@@ -269,8 +314,12 @@ public class Utils {
             this.blockHit = blockHit;
         }
 
-        public void addEntityHit(EntityLivingBase entity) {
+        public void addEntityHit(T entity) {
             entities.add(entity);
+        }
+        
+        public List<T> getEntityHits() {
+        	return Collections.unmodifiableList(this.entities);
         }
 	}
 	

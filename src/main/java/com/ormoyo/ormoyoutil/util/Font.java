@@ -36,11 +36,13 @@ public class Font {
 		}
 		
 		protected ResourceLocation getFntResourceLocation() {
-			return new ResourceLocation(this.getRegistryName().getResourceDomain(), "font/" + this.getRegistryName().getResourcePath() + ".fnt");
+			int i = this.getRegistryName().getResourcePath().lastIndexOf('.');
+			return new ResourceLocation(this.getRegistryName().getResourceDomain(), "font/" + this.getRegistryName().getResourcePath().substring(0, i > 0 ? i : this.getRegistryName().getResourcePath().length()) + ".fnt");
 		}
 		
 		public ResourceLocation getTextureResourceLocation() {
-			return new ResourceLocation(this.getRegistryName().getResourceDomain(), "textures/font/" + this.getRegistryName().getResourcePath() + ".png");
+			int i = this.getRegistryName().getResourcePath().lastIndexOf('.');
+			return new ResourceLocation(this.getRegistryName().getResourceDomain(), "textures/font/" + this.getRegistryName().getResourcePath().substring(0, i > 0 ? i : this.getRegistryName().getResourcePath().length()));
 		}
 		
 		@Override

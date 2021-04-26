@@ -59,7 +59,7 @@ public class ClientProxy extends CommonProxy {
     	super.init();
     	this.registerKeybinds();
     	OrmoyoResourcePackListener listener = new OrmoyoResourcePackListener();
-    	listener.onResourceManagerReload(null, type -> type == OrmoyoResourceTypes.OBJ_MODEL || type == OrmoyoResourceTypes.FONT);
+    	listener.onResourceManagerReload(null, type -> type == OrmoyoResourceTypes.OBJ_MODELS || type == OrmoyoResourceTypes.FONTS);
     }
     
 	public void registerKeybinds() {
