@@ -7,6 +7,7 @@ import com.ormoyo.ormoyoutil.abilities.Ability;
 import com.ormoyo.ormoyoutil.abilities.AbilityEntry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -31,7 +32,7 @@ public class CapabilityHandler {
 	
 	@SubscribeEvent
 	public static void AttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
-		if(event.getObject() instanceof EntityPlayer) {
+		if(event.getObject() instanceof EntityPlayerMP) {
 			EntityPlayer player = (EntityPlayer) event.getObject();
 			event.addCapability(new ResourceLocation(OrmoyoUtil.MODID, "ability_data"), new AbilityDataProvider<>(CAPABILITY_PLAYER_DATA, null, player));
 		}
