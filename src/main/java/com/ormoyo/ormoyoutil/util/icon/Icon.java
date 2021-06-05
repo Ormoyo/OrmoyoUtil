@@ -20,12 +20,12 @@ public class Icon {
 	public static class IconEntry extends Impl<IconEntry> {
 		private IIcon icon;
 		
-		public IconEntry(IIcon icon, ResourceLocation name) {
+		public IconEntry(ResourceLocation name, IIcon icon) {
 			this.icon = icon;
 			this.setRegistryName(name);
 		}
 		
-		public IconEntry(IIcon icon, String name) {
+		public IconEntry(String name, IIcon icon) {
 			this.icon = icon;
 			this.setRegistryName(name);
 		}

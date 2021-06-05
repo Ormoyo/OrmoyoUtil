@@ -5,8 +5,8 @@ import java.util.Locale;
 import org.lwjgl.util.vector.Vector3f;
 
 public class Vertex {
-    private Vector3f position;
-    private int index;
+    private final Vector3f position;
+    private  int index;
 
     public Vertex(float x, float y, float z) {
         this(new Vector3f(x, y, z));

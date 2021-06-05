@@ -6,7 +6,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 
 public class Normal {
-    private Vector3f vec;
+    private final Vector3f vec;
     private int index;
 	
     public Normal(float x, float y, float z) {

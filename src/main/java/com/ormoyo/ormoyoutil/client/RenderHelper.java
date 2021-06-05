@@ -136,7 +136,7 @@ public class RenderHelper {
 	public static void drawButtonHitBox(GuiButton button) {
 		setupOpacity();
 		Minecraft.getMinecraft().renderEngine.bindTexture(WHITE);
-		int opacity = 80;
+		int opacity = 125;
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();
 		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
@@ -150,7 +150,7 @@ public class RenderHelper {
 	public static void drawButtonHitBox(GuiButton button, Color color) {
 		setupOpacity();
 		Minecraft.getMinecraft().renderEngine.bindTexture(WHITE);
-		int opacity = 80;
+		int opacity = 125;
 		if(color.getAlpha() <= 255 && color.getAlpha() >= 0) {
 			opacity = color.getAlpha();
 		}
@@ -165,6 +165,7 @@ public class RenderHelper {
 	}
 	
     public static void setupOpacity() {
+    	GlStateManager.enableBlend();
         GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
     }
 }

@@ -1,9 +1,8 @@
 package com.ormoyo.ormoyoutil.network;
 
 import com.ormoyo.ormoyoutil.abilities.Ability;
-import com.ormoyo.ormoyoutil.abilities.AbilityEntry;
 import com.ormoyo.ormoyoutil.capability.CapabilityHandler;
-import com.ormoyo.ormoyoutil.capability.IAbiltyData;
+import com.ormoyo.ormoyoutil.capability.IAbilityData;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -14,18 +13,18 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class MessageOnAbilityKeyRelease extends AbstractMessage<MessageOnAbilityKeyRelease> {
-	AbilityEntry entry;
+	ResourceLocation entry;
 	
 	public MessageOnAbilityKeyRelease() {
 	}
 	
 	public MessageOnAbilityKeyRelease(Ability ability) {
-		this.entry = ability.getEntry();
+		this.entry = ability.getRegistryName();
 	}
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		this.entry = Ability.getRegistry().getValue(new ResourceLocation(ByteBufUtils.readUTF8String(buf)));
+		this.entry = new ResourceLocation(ByteBufUtils.readUTF8String(buf));
 	}
 
 	@Override
@@ -39,9 +38,9 @@ public class MessageOnAbilityKeyRelease extends AbstractMessage<MessageOnAbility
 
 	@Override
 	public void onServerReceived(MinecraftServer server, MessageOnAbilityKeyRelease message, EntityPlayer player, MessageContext messageContext) {
-		IAbiltyData capability = player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
+		IAbilityData capability = player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
 		for(Ability ability : capability.getUnlockedAbilities()) {
-			if(ability.getEntry().equals(message.entry)) {
+			if(ability.getRegistryName().equals(message.entry)) {
 				ability.onKeyRelease();
 			}
 		}

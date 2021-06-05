@@ -6,7 +6,7 @@ import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 
 public class TextureCoords {
-    private Vector2f uvCoords;
+    private final Vector2f uvCoords;
     private int index;
 
     public TextureCoords(float u, float v) {

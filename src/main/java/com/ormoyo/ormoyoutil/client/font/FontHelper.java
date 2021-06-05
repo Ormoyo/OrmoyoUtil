@@ -1,132 +1,39 @@
 package com.ormoyo.ormoyoutil.client.font;
 
 import java.awt.Color;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import org.apache.commons.io.IOUtils;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Map;
 
+import javax.imageio.ImageIO;
+
+import com.google.common.collect.Maps;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
 import com.ormoyo.ormoyoutil.client.RenderHelper;
 import com.ormoyo.ormoyoutil.event.FontRenderEvent;
 import com.ormoyo.ormoyoutil.util.DoubleKeyMap;
-import com.ormoyo.ormoyoutil.util.Font.FontEntry;
-import com.ormoyo.ormoyoutil.util.ListDoubleKeyMap;
+import com.ormoyo.ormoyoutil.util.FontHandler.Font;
+import com.ormoyo.ormoyoutil.util.DoubleKeyListMap;
 import com.ormoyo.ormoyoutil.util.ListHashMap;
-import com.ormoyo.ormoyoutil.util.resourcelocation.AdvancedResourceLocation;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 
 public class FontHelper {
-	private static final ListHashMap<ResourceLocation, Dot> fontToDot = new ListHashMap<>();
-	private static final DoubleKeyMap<ResourceLocation, Integer, ResourceLocation> indexToPage = new ListDoubleKeyMap<>();
-	private static final DoubleKeyMap<ResourceLocation, Character, Char> charToChar = new ListDoubleKeyMap<>();
+	static final ListHashMap<ResourceLocation, Dot> fontToDot = new ListHashMap<>();
+	static final DoubleKeyMap<ResourceLocation, Integer, Page> indexToPage = new DoubleKeyListMap<>();
+	static final DoubleKeyMap<ResourceLocation, Character, Char> charToChar = new DoubleKeyListMap<>();
+	static final Map<ResourceLocation, BufferedImage> ttfToImage = Maps.newHashMap();
+	static final Map<ResourceLocation, ResourceLocation> fontToTTF = Maps.newHashMap();
 	
-	public static void loadFont(ResourceLocation font, ResourceLocation texture) {
-		InputStream stream = null;
-		try {
-			stream = Minecraft.getMinecraft().getResourceManager().getResource(font).getInputStream();
-			int dotX = -1;
-			int dotY = -1;
-			int dotWidth = -1;
-			int dotHeight = -1;
-			int dotXOffset = -1;
-			int dotYOffset = -1;
-			boolean isDefaultDot = false;
-			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-			String line;
-			while((line=reader.readLine()) != null) {
-				String pageFileName = "";
-				int pageId = -1;
-				int id = -1;
-				int x = -1;
-				int y = -1;
-				int width = -1;
-				int height = -1;
-				int xoffset = -1;
-				int yoffset = -1;
-				int charPageId = -1;
-				if(line.startsWith("page")) {
-					for(String string : line.split(" ")) {
-						if(string.startsWith("id=")) {
-							pageId = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("file=")) {
-							pageFileName = string.split("=")[1].replace("\"", "");
-						}
-					}
-				}
-				if(pageId > -1 && !pageFileName.isEmpty()) {
-					ResourceLocation l = new ResourceLocation(texture.getResourceDomain(), texture.getResourcePath().substring(0, texture.getResourcePath().lastIndexOf('/') + 1) + pageFileName);
-					Minecraft.getMinecraft().getResourceManager().getResource(l);
-					indexToPage.put(font, pageId, l);
-				}
-				if(line.startsWith("char")) {
-					for(String string : line.split(" ")) {
-						if(string.startsWith("id=")) {
-							id = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("x=")) {
-							x = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("y=")) {
-							y = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("width=")) {
-							width = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("height=")) {
-							height = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("xoffset=")) {
-							xoffset = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("yoffset=")) {
-							yoffset = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("page=")) {
-							charPageId = Integer.parseInt(string.split("=")[1]);
-						}
-					}
-				}
-				if(id > 0 && x >= 0 && y >= 0 && width > 0 && height > 0 && charPageId >= 0 && indexToPage.containsKey2(charPageId)) {
-					charToChar.put(font, (char)id, new Char((char)id, x, y, width, height, xoffset, yoffset, charPageId));
-				}
-				
-				if(line.startsWith("dot")) {
-					for(String string : line.split(" ")) {
-						if(string.startsWith("x=")) {
-							dotX = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("y=")) {
-							dotY = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("width=")) {
-							dotWidth = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("height=")) {
-							dotHeight = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("xoffset=")) {
-							dotXOffset = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("yoffset=")) {
-							dotYOffset = Integer.parseInt(string.split("=")[1]);
-						}else if(string.startsWith("default")) {
-							isDefaultDot = true;
-						}
-					}
-				}
-			}
-			ResourceLocation dot = new ResourceLocation(texture.getResourceDomain(), texture.getResourcePath().substring(0, texture.getResourcePath().lastIndexOf('/') + 1) + "dot/" + ".png");
-			if(dotX >= 0 && dotY >= 0 && dotWidth > 0 && dotHeight > 0 && !isDefaultDot) {
-				Minecraft.getMinecraft().getResourceManager().getResource(dot);
-				fontToDot.put(font, new Dot(dot, dotX, dotY, dotWidth, dotHeight, dotXOffset, dotYOffset));
-			}
-			if(isDefaultDot) {
-				AdvancedResourceLocation defaultDot = new AdvancedResourceLocation(OrmoyoUtil.MODID, "textures/font/dot/default.png", 0, 3, 16, 10, 16, 16);
-				fontToDot.put(font, new Dot(defaultDot, defaultDot.getU(), defaultDot.getV(), 
-						defaultDot.getWidth(), defaultDot.getHeight(), 0, 0));
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}finally {
-			IOUtils.closeQuietly(stream);
-		}
-	}
-	
-	public static FontRenderer createFontRendererFromFont(FontEntry font) {
+	public static FontRenderer createFontRendererFromFont(Font font) {
 		FontRenderer renderer = new FontRenderer(null, null, null, false) {
 			@Override
 			public int drawString(String text, float x, float y, int color, boolean dropShadow) {
@@ -159,34 +66,81 @@ public class FontHelper {
 	            float blue = (float)(color >> 8 & 255) / 255.0F;
 	            float green = (float)(color & 255) / 255.0F;
 	            float alpha = (float)(color >> 24 & 255) / 255.0F;
-				FontHelper.drawString(text, x, y, 0.5, new Color(red, blue, green, alpha), font);
+				FontHelper.drawString(font, text, x, y, 0.5, new Color(red, blue, green, alpha));
 				return (int) x;
 			}
 		};
 		return renderer;
 	}
 	
-	public static void drawString(String text, double posX, double posY, double scale, Color color, FontEntry font) {
+	public static void drawString(Font font, String text, double posX, double posY, double scale, Color color) {
 		FontRenderEvent.Pre event = new FontRenderEvent.Pre(text, font);
 		if(MinecraftForge.EVENT_BUS.post(event)) return;
 		text = event.getText();
 		font = event.getFont();
 		double cursorX = 0;
+		double d = 0;
 		for(char character : text.toCharArray()) {
 			Char chara = charToChar.get(font.getResourceLocation(), character);
-			if(chara != null && chara.ch == character) {
+			if(chara == null && !charToChar.containsKey2(character)) OrmoyoUtil.LOGGER.error("The font " + font.getRegistryName() + " doesn't have the character " + character + " in it's character set");
+			if(chara != null) {
 				if(character == ' ') {
 					cursorX += 2 * scale;
 				}
 				
-				RenderHelper.drawTexturedRect(indexToPage.get(font.getResourceLocation(), chara.page), posX + cursorX - 4 * scale, posY + chara.yoffset * scale - 6 * scale, chara.x, chara.y, chara.width, chara.height, 256, 256, scale, color);
-				cursorX += (chara.width - chara.xoffset - 9) * scale;
+				GlStateManager.enableBlend();
+				RenderHelper.setupOpacity();
+				switch(font.getType()) {
+				case FNT:
+					int height = getWordHeight(text, font, scale);
+					Page page = indexToPage.get(font.getResourceLocation(), chara.page);
+					RenderHelper.drawTexturedRect(page.texture, posX + cursorX - 4 * scale, posY + chara.yoffset * scale - 6 * scale + (height - chara.height) * scale, chara.x, chara.y, chara.width, chara.height, page.width, page.height, scale, color);
+					cursorX += (chara.width - chara.xoffset - 7) * scale;
+					break;
+				case TTF:
+					int height1 = getWordHeight(text, font, 1);
+					double h = (height1 - chara.height) * scale;
+					if(h != 0 && d < h) {
+						d = h;
+					}
+					ResourceLocation location = fontToTTF.getOrDefault(font.getResourceLocation(), TextureManager.RESOURCE_LOCATION_EMPTY);
+					BufferedImage image = ttfToImage.get(font.getResourceLocation());
+					if(location == TextureManager.RESOURCE_LOCATION_EMPTY) {
+						if(image != null) {
+							DynamicTexture tex = new DynamicTexture(image);
+							location = Minecraft.getMinecraft().getRenderManager().renderEngine.getDynamicTextureLocation(font.getResourceLocation().toString(), tex);
+							fontToTTF.put(font.getResourceLocation(), location);
+						}
+					}
+					RenderHelper.drawTexturedRect(location, posX + cursorX, posY + chara.yoffset * scale + d * scale, chara.x, chara.y, chara.width, chara.height, image.getWidth(), image.getHeight(), scale, color);
+					cursorX += (chara.width - chara.xoffset) * scale;
+					break;
+				case OTF:
+					int height2 = getWordHeight(text, font, scale);
+					double h1 = height2 - chara.height * scale;
+					if(h1 != 0 && d < h1) {
+						d = h1;
+					}
+					ResourceLocation location1 = fontToTTF.getOrDefault(font.getResourceLocation(), TextureManager.RESOURCE_LOCATION_EMPTY);
+					BufferedImage image1 = ttfToImage.get(font.getResourceLocation());
+					if(location1 == TextureManager.RESOURCE_LOCATION_EMPTY) {
+						if(image1 != null) {
+							DynamicTexture tex = new DynamicTexture(image1);
+							location1 = Minecraft.getMinecraft().getRenderManager().renderEngine.getDynamicTextureLocation(font.getResourceLocation().toString(), tex);
+							fontToTTF.put(font.getResourceLocation(), location1);
+						}
+					}
+					RenderHelper.drawTexturedRect(location1, posX + cursorX, posY + chara.yoffset * scale + d * scale, chara.x, chara.y, chara.width, chara.height, image1.getWidth(), image1.getHeight(), scale, color);
+					cursorX += (chara.width - chara.xoffset) * scale;
+					break;
+				}
+				GlStateManager.disableBlend();
 			}
 		}
 		MinecraftForge.EVENT_BUS.post(new FontRenderEvent.Post(text, font));
 	}
 	
-	public static void drawString(String text, double posX, double posY, double scale, Color color, FontEntry font, double lineWidth) {
+	public static void drawString(String text, double posX, double posY, double scale, Color color, Font font, double lineWidth) {
 		FontRenderEvent.Pre event = new FontRenderEvent.Pre(text, font);
 		if(MinecraftForge.EVENT_BUS.post(event)) return;
 		text = event.getText();
@@ -196,20 +150,56 @@ public class FontHelper {
 		String[] words = text.split(" ");
 		for(String word : words) {
 			if(cursorX + getWordWidth(word, font, scale) > lineWidth) {
-				if(word.length() <= 5) {
+				if(word.length() < 5) {
 					cursorX = 0;
 					cursorY += 25;
 				}
 			}
 			for(char character : word.toCharArray()) {
 				Char chara = charToChar.get(font.getResourceLocation(), character);
+				if(chara == null && !charToChar.containsKey2(character)) OrmoyoUtil.LOGGER.error("The font " + font.getRegistryName() + " doesn't have the character " + character + " in it's character set");
 				if(chara != null) {
-					if(cursorX + chara.width * scale > lineWidth) {
-						cursorX = 0;
-						cursorY += 25;
+					if(character == ' ') {
+						cursorX += 2 * scale;
 					}
-					RenderHelper.drawTexturedRect(indexToPage.get(font.getResourceLocation(), chara.page), posX + cursorX - 4 * scale, (posY + chara.yoffset * scale - 6 * scale) + cursorY * scale, chara.x, chara.y, chara.width, chara.height, 256, 256, scale, color);
-					cursorX += (chara.width - chara.xoffset - 9) * scale;
+					
+					GlStateManager.enableBlend();
+					RenderHelper.setupOpacity();
+					switch(font.getType()) {
+					case FNT:
+						int height = getWordHeight(word, font, scale);
+						Page page = indexToPage.get(font.getResourceLocation(), chara.page);
+						RenderHelper.drawTexturedRect(page.texture, posX + cursorX - 4 * scale, posY + chara.yoffset * scale - 6 * scale + (height - chara.height) * scale, chara.x, chara.y, chara.width, chara.height, page.width, page.height, scale, color);
+						break;
+					case TTF:
+						int height1 = getWordHeight(word, font, scale);
+						ResourceLocation location = fontToTTF.getOrDefault(font.getResourceLocation(), TextureManager.RESOURCE_LOCATION_EMPTY);
+						BufferedImage image = ttfToImage.get(font.getResourceLocation());
+						if(location == TextureManager.RESOURCE_LOCATION_EMPTY) {
+							if(image != null) {
+								DynamicTexture tex = new DynamicTexture(image);
+								location = Minecraft.getMinecraft().getRenderManager().renderEngine.getDynamicTextureLocation(font.getResourceLocation().toString(), tex);
+								fontToTTF.put(font.getResourceLocation(), location);
+							}
+						}
+						RenderHelper.drawTexturedRect(location, posX + cursorX - 4 * scale, posY + cursorY * scale + chara.yoffset * scale - 6 * scale + (height1 - chara.height) * scale, chara.x, chara.y, chara.width, chara.height, image.getWidth(), image.getHeight(), scale, color);
+						break;
+					case OTF:
+						int height2 = getWordHeight(word, font, scale);
+						ResourceLocation location1 = fontToTTF.getOrDefault(font.getResourceLocation(), TextureManager.RESOURCE_LOCATION_EMPTY);
+						BufferedImage image1 = ttfToImage.get(font.getResourceLocation());
+						if(location1 == TextureManager.RESOURCE_LOCATION_EMPTY) {
+							if(image1 != null) {
+								DynamicTexture tex = new DynamicTexture(image1);
+								location1 = Minecraft.getMinecraft().getRenderManager().renderEngine.getDynamicTextureLocation(font.getResourceLocation().toString(), tex);
+								fontToTTF.put(font.getResourceLocation(), location1);
+							}
+						}
+						RenderHelper.drawTexturedRect(location1, posX + cursorX - 4 * scale, posY + cursorY * scale + chara.yoffset * scale - 6 * scale + (height2 - chara.height) * scale, chara.x, chara.y, chara.width, chara.height, image1.getWidth(), image1.getHeight(), scale, color);
+						break;
+					}
+					GlStateManager.disableBlend();
+					cursorX += (chara.width - chara.xoffset) * scale;
 				}
 			}
 			cursorX += 4 * scale;
@@ -217,23 +207,42 @@ public class FontHelper {
 		MinecraftForge.EVENT_BUS.post(new FontRenderEvent.Post(text, font));
 	}
 	
-	public static int getWordWidth(String word, FontEntry font, double scale) {
+	public static int getWordWidth(String word, Font font, double scale) {
 		int width = 0;
-		for(char character : word.toCharArray()) {
+		for(int i = 0; i < word.toCharArray().length; i++) {
+			char character = word.charAt(i);
 			Char chara = charToChar.get(font.getResourceLocation(), character);
-			if(character == ' ') {
-				width += 4 * scale;
-			}
+			if(chara == null && !charToChar.containsKey2(character)) OrmoyoUtil.LOGGER.error("The font " + font.getRegistryName() + " doesn't have the character " + character + " in it's character set");
 			if(chara != null) {
-				if(chara != null) {
-					width += (chara.width - chara.xoffset - 9) * scale;
+				if(word.toCharArray().length == 1) {
+					width += chara.width * scale;
+				}else {
+					if(i == word.toCharArray().length - 1) {
+						width += (chara.width - chara.xoffset) * scale - 2;
+					}else {
+						width += Math.round((chara.width - chara.xoffset) * scale);
+					}
 				}
 			}
 		}
 		return width;
 	}
 	
-	public static boolean drawDot(FontEntry font, int posX, int posY, double scale) {
+	public static int getWordHeight(String word, Font font, double scale) {
+		int height = 0;
+		for(char character : word.toCharArray()) {
+			Char chara = charToChar.get(font.getResourceLocation(), character);
+			if(chara == null && !charToChar.containsKey2(character)) OrmoyoUtil.LOGGER.error("The font " + font.getRegistryName() + " doesn't have the character " + character + " in it's character set");
+			if(chara != null) {
+				if(height < chara.height) {
+					height = (int) Math.round(chara.height * scale);
+				}
+			}
+		}
+		return height;	
+	}
+	
+	public static boolean drawDot(Font font, int posX, int posY, double scale) {
 		Dot dot = fontToDot.get(font.getResourceLocation());
 		if(dot != null) {
 			RenderHelper.drawTexturedRect(dot.location, posX + dot.xoffset, posY + dot.yoffset, dot.x, dot.y, dot.width, dot.height, dot.width, dot.height, scale);
@@ -242,17 +251,17 @@ public class FontHelper {
 		return false;
 	}
 	
-	private static class Char {
-		private final char ch;
-		private final int x;
-		private final int y;
-		private final int width;
-		private final int height;
-		private final int xoffset;
-		private final int yoffset;
-		private final int page;
+	static class Char {
+		final char ch;
+		final int x;
+		final int y;
+		final int width;
+		final int height;
+		int xoffset;
+		int yoffset;
+		final int page;
 		
-		private Char(char ch, int x, int y, int width, int height, int xoffset, int yoffset, int pageIndex) {
+		Char(char ch, int x, int y, int width, int height, int xoffset, int yoffset, int pageIndex) {
 			this.ch = ch;
 			this.x = x;
 			this.y = y;
@@ -261,6 +270,10 @@ public class FontHelper {
 			this.xoffset = xoffset;
 			this.yoffset = yoffset;
 			this.page = pageIndex;
+		}
+		
+		public void setYOffset(int yoffset) {
+			this.yoffset = yoffset;
 		}
 		
 		@Override
@@ -293,7 +306,7 @@ public class FontHelper {
 		}
 	}
 	
-	private static class Dot {
+	static class Dot {
 		private final int x;
 		private final int y;
 		private final int width;
@@ -301,7 +314,7 @@ public class FontHelper {
 		private final int xoffset;
 		private final int yoffset;
 		private final ResourceLocation location;
-		private Dot(ResourceLocation location, int x, int y, int width, int height, int xoffset, int yoffset) {
+		Dot(ResourceLocation location, int x, int y, int width, int height, int xoffset, int yoffset) {
 			this.location = location;
 			this.x = x;
 			this.y = y;
@@ -309,6 +322,17 @@ public class FontHelper {
 			this.height = height;
 			this.xoffset = xoffset;
 			this.yoffset = yoffset;
+		}
+	}
+	
+	static class Page {
+		final ResourceLocation texture;
+		final int width;
+		final int height;
+		public Page(ResourceLocation texture, int width, int height) {
+			this.texture = texture;
+			this.width = width;
+			this.height = height;
 		}
 	}
 }

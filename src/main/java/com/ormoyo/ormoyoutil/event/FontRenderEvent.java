@@ -1,6 +1,6 @@
 package com.ormoyo.ormoyoutil.event;
 
-import com.ormoyo.ormoyoutil.util.Font;
+import com.ormoyo.ormoyoutil.util.FontHandler;
 
 import net.minecraftforge.fml.common.eventhandler.Cancelable;
 import net.minecraftforge.fml.common.eventhandler.Event;
@@ -10,17 +10,17 @@ import net.minecraftforge.fml.common.eventhandler.Event;
  */
 public class FontRenderEvent extends Event {
 	protected String text;
-	protected Font.FontEntry font;
+	protected FontHandler.Font font;
 	
 	@Cancelable
 	public static class Pre extends FontRenderEvent {
 
-		public Pre(String text, Font.FontEntry font) {
+		public Pre(String text, FontHandler.Font font) {
 			this.text = text;
 			this.font = font;
 		}
 		
-		public void setFont(Font.FontEntry font) {
+		public void setFont(FontHandler.Font font) {
 			this.font = font;
 		}
 		
@@ -30,7 +30,7 @@ public class FontRenderEvent extends Event {
 	}
 	
 	public static class Post extends FontRenderEvent {
-		public Post(String text, Font.FontEntry font) {
+		public Post(String text, FontHandler.Font font) {
 			this.text = text;
 			this.font = font;
 		}
@@ -40,7 +40,7 @@ public class FontRenderEvent extends Event {
 		return this.text;
 	}
 
-	public Font.FontEntry getFont() {
+	public FontHandler.Font getFont() {
 		return this.font;
 	}
 }

@@ -42,7 +42,7 @@ public class CommandUnlockAbility extends CommandBase {
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
 		if(args.length == 1) {
 			Set<ResourceLocation> set = Sets.newHashSet();
-			for(AbilityEntry entry : Ability.getRegistry().getValuesCollection()) {
+			for(AbilityEntry entry : Ability.getAbilityRegistry().getValuesCollection()) {
 				try {
 					Ability ability = entry.newInstance(CommandBase.getCommandSenderAsPlayer(sender));
 					if(ability.isVisable()) {
@@ -97,10 +97,10 @@ public class CommandUnlockAbility extends CommandBase {
 	}
 	
 	private Ability getAbilityByName(MinecraftServer server, ICommandSender sender, String argument) {
-		for(ResourceLocation location : Ability.getRegistry().getKeys()) {
+		for(ResourceLocation location : Ability.getAbilityRegistry().getKeys()) {
 			if(location.equals(new ResourceLocation(argument))) {
 				try {
-					return Ability.getRegistry().getValue(new ResourceLocation(argument)).newInstance(CommandBase.getCommandSenderAsPlayer(sender));
+					return Ability.getAbilityRegistry().getValue(new ResourceLocation(argument)).newInstance(CommandBase.getCommandSenderAsPlayer(sender));
 				} catch (PlayerNotFoundException e) {
 					e.printStackTrace();
 				}

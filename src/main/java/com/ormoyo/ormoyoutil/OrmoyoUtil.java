@@ -4,17 +4,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.ormoyo.ormoyoutil.commands.CommandUnlockAbility;
+import com.ormoyo.ormoyoutil.network.MessageGetAbilitySyncedValueOnClient;
+import com.ormoyo.ormoyoutil.network.MessageGetAbilitySyncedValueOnServer;
+import com.ormoyo.ormoyoutil.network.MessageInvokeGetSyncedValueEventOnClient;
+import com.ormoyo.ormoyoutil.network.MessageInvokeGetSyncedValueEventOnServer;
 import com.ormoyo.ormoyoutil.network.MessageInvokeMethodOnClient;
 import com.ormoyo.ormoyoutil.network.MessageInvokeMethodOnServer;
 import com.ormoyo.ormoyoutil.network.MessageOnAbilityKeyPress;
 import com.ormoyo.ormoyoutil.network.MessageOnAbilityKeyRelease;
 import com.ormoyo.ormoyoutil.network.MessageSetClientAbilityList;
-import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueToClient;
-import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueToServer;
+import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueOnClient;
+import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueOnServer;
 import com.ormoyo.ormoyoutil.network.NetworkHandler;
 import com.ormoyo.ormoyoutil.network.NetworkWrapper;
 import com.ormoyo.ormoyoutil.proxy.CommonProxy;
 import com.ormoyo.ormoyoutil.util.InjectRender;
+import com.ormoyo.ormoyoutil.util.Utils;
 
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -26,6 +31,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
 @Mod(modid = OrmoyoUtil.MODID, name = OrmoyoUtil.NAME, version = OrmoyoUtil.VERSION, acceptedMinecraftVersions = OrmoyoUtil.MINECRAFT_VERSION)
@@ -43,7 +49,7 @@ public class OrmoyoUtil {
 	@SidedProxy(serverSide = "com.ormoyo.ormoyoutil.proxy.CommonProxy", clientSide = "com.ormoyo.ormoyoutil.proxy.ClientProxy")
 	public static CommonProxy proxy;
 	
-	@NetworkWrapper({MessageInvokeMethodOnServer.class, MessageInvokeMethodOnClient.class, MessageUpdateAbilitySyncedValueToServer.class, MessageUpdateAbilitySyncedValueToClient.class, MessageOnAbilityKeyPress.class, MessageOnAbilityKeyRelease.class, MessageSetClientAbilityList.class})
+	@NetworkWrapper({MessageInvokeGetSyncedValueEventOnServer.class, MessageInvokeGetSyncedValueEventOnClient.class, MessageGetAbilitySyncedValueOnServer.class, MessageGetAbilitySyncedValueOnClient.class, MessageInvokeMethodOnServer.class, MessageInvokeMethodOnClient.class, MessageUpdateAbilitySyncedValueOnServer.class, MessageUpdateAbilitySyncedValueOnClient.class, MessageOnAbilityKeyPress.class, MessageOnAbilityKeyRelease.class, MessageSetClientAbilityList.class})
 	public static SimpleNetworkWrapper NETWORK_WRAPPER;
 	
 	@EventHandler

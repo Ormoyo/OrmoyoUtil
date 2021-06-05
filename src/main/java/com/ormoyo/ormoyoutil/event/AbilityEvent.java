@@ -1,8 +1,14 @@
 package com.ormoyo.ormoyoutil.event;
 
+import java.util.UUID;
+
 import com.ormoyo.ormoyoutil.abilities.Ability;
+import com.ormoyo.ormoyoutil.abilities.AbilitySyncedValue;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.RegistryEvent.Register;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.Cancelable;
 
@@ -11,9 +17,11 @@ import net.minecraftforge.fml.common.eventhandler.Cancelable;
  *
  */
 public class AbilityEvent extends PlayerEvent {
+	protected final Ability ability;
 	
-	public AbilityEvent(EntityPlayer player) {
-		super(player);
+	public AbilityEvent(Ability ability) {
+		super(ability.getOwner());
+		this.ability = ability;
 	}
 	
 	/**
@@ -21,14 +29,37 @@ public class AbilityEvent extends PlayerEvent {
 	 */
 	@Cancelable
 	public static class OnAbilityUnlockedEvent extends AbilityEvent {
-		private final Ability ability;
-		public OnAbilityUnlockedEvent(EntityPlayer player, Ability ability) {
-			super(player);
-			this.ability = ability;
+		public OnAbilityUnlockedEvent(Ability ability) {
+			super(ability);
+		}
+	}
+	
+	/**
+	 * This event will fire when the method {@link AbilitySyncedValue#getValue} has been invoked and is ready to return it's value
+	 */
+	public static class AbilityGetSyncedValueEvent extends AbilityEvent {
+		private final Object value;
+		private final UUID id;
+		public AbilityGetSyncedValueEvent(Ability ability, Object value, UUID id) {
+			super(ability);
+			this.value = value;
+			this.id = id;
 		}
 		
 		public Ability getAbility() {
 			return ability;
 		}
+		
+		public UUID getEventId() {
+			return this.id;
+		}
+		
+		public Object getValue() {
+			return this.value;
+		}
+	}
+	
+	public Ability getAbility() {
+		return this.ability;
 	}
 }

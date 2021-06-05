@@ -9,12 +9,12 @@ import net.minecraftforge.registries.IForgeRegistryEntry.Impl;
 public class AbilityEntry extends Impl<AbilityEntry> {
 	private Class<? extends Ability> clazz;
 	
-	public AbilityEntry(Class<? extends Ability> clazz, ResourceLocation name) {
+	public AbilityEntry(ResourceLocation name, Class<? extends Ability> clazz) {
 		this.clazz = clazz;
 		this.setRegistryName(name);
 	}
 	
-	public AbilityEntry(Class<? extends Ability> clazz, String name) {
+	public AbilityEntry(String name, Class<? extends Ability> clazz) {
 		this.clazz = clazz;
 		this.setRegistryName(name);
 	}
@@ -25,8 +25,7 @@ public class AbilityEntry extends Impl<AbilityEntry> {
 	
 	public Ability newInstance(EntityPlayer player) {
 		try {
-			Ability ability = ObfuscationReflectionHelper.findConstructor(clazz, EntityPlayer.class).newInstance(player);
-			ObfuscationReflectionHelper.setPrivateValue(Ability.class, ability, this, "entry");
+			Ability ability = ObfuscationReflectionHelper.findConstructor(this.clazz, EntityPlayer.class).newInstance(player);
 			return ability;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | SecurityException e) {
 			e.printStackTrace();

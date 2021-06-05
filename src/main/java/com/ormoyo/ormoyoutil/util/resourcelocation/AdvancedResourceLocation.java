@@ -61,7 +61,7 @@ public class AdvancedResourceLocation extends ResourceLocation {
     }
     
     public int getHeight() {
-		return this.width;
+		return this.height;
     }
     
     public int getImageWidth() {

@@ -3,8 +3,12 @@ package com.ormoyo.ormoyoutil.client.model.obj;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
 
 import net.minecraft.util.ResourceLocation;
@@ -13,7 +17,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryBuilder;
-import net.minecraftforge.registries.IForgeRegistryEntry.Impl;
 
 public class OBJModel implements Cloneable {
 	private static final ResourceLocation WHITE = new ResourceLocation(OrmoyoUtil.MODID, "textures/entity/white.png");
@@ -115,5 +118,13 @@ public class OBJModel implements Cloneable {
 		public static void onNewRegistry(RegistryEvent.NewRegistry event) {
 			OBJ_MODEL_REGISTRY = new RegistryBuilder<OBJModelEntry>().setName(new ResourceLocation(OrmoyoUtil.MODID, "obj_model")).setType(OBJModelEntry.class).setIDRange(0, 2048).create();
 		}
+    }
+    
+    public static class OBJModelHandler {
+    	private static final Multimap<OBJModelEntry, OBJModelBase> m = ArrayListMultimap.create();
+    	
+    	public static void attachEntryToModelBase(OBJModelEntry entry, OBJModelBase clazz) {
+    		m.put(entry, clazz);
+    	}
     }
 }

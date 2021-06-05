@@ -6,6 +6,9 @@ import java.util.Map;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import com.google.common.collect.Maps;
+import com.ormoyo.ormoyoutil.OrmoyoUtil;
+import com.ormoyo.ormoyoutil.abilities.AbilitySyncedValue.ChangeableValue;
+import com.ormoyo.ormoyoutil.abilities.AbilitySyncedValue.InvokableMethod;
 import com.ormoyo.ormoyoutil.abilities.AbilitySyncedValue.OnlyChangableForServer;
 import com.ormoyo.ormoyoutil.abilities.AbilitySyncedValue.OnlyInvokableForServer;
 import com.ormoyo.ormoyoutil.config.ConfigHandler;
@@ -18,9 +21,18 @@ import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.EnumDifficulty;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 
+@EventBusSubscriber(modid = OrmoyoUtil.MODID)
 public class AbilityStats extends Ability {
 	@OnlyChangableForServer
 	private short level = 1;
@@ -46,7 +58,7 @@ public class AbilityStats extends Ability {
 	
 	private static final Map<Class<? extends EntityLivingBase>, Integer> entityToExp = Maps.newHashMap();
 	
-	@Override
+	@SubscribeEvent
 	public void onDeathEvent(LivingDeathEvent event) {
 		if(event.getSource().getTrueSource() != null) {
 			if(event.getSource().getTrueSource().equals(this.owner)) {
@@ -137,7 +149,7 @@ public class AbilityStats extends Ability {
 	@OnlyInvokableForServer
 	public void setEXP(int EXP) {
 		this.exp = EXP;
-		AbilitySyncedValue.setValue(this, "EXP", EXP);
+		AbilitySyncedValue.setValue(this, "exp", EXP);
 	}
 	
 	public int getEXP() {
@@ -147,7 +159,7 @@ public class AbilityStats extends Ability {
 	@OnlyInvokableForServer
 	public void setRequiredEXP(int requiredEXP) {
 		this.requiredExp = requiredEXP;
-		AbilitySyncedValue.setValue(this, "requiredEXP", requiredEXP);
+		AbilitySyncedValue.setValue(this, "requiredExp", requiredEXP);
 	}
 	
 	public int getRequiredEXP() {

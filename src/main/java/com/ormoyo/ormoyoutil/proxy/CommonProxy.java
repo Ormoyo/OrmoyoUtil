@@ -34,6 +34,10 @@ public class CommonProxy {
     public void postInit() {
     }
     
+    public boolean isServerSide() {
+    	return true;
+    }
+    
 	public Set<Ability> getUnlockedAbilities(EntityPlayer player) {
 		if(player != null) {
 			return player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null).getUnlockedAbilities();
@@ -41,14 +45,14 @@ public class CommonProxy {
 		return null;
 	}
 	
-	public Ability getUnlockedAbility(EntityPlayer player, ResourceLocation name) {
+	public Ability getUnlockedAbility(ResourceLocation name, EntityPlayer player) {
 		if(player != null) {
 			return player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null).getUnlockedAbility(name);
 		}
 		return null;
 	}
 	
-	public<T extends Ability> T getUnlockedAbility(EntityPlayer player, Class<T> clazz) {
+	public<T extends Ability> T getUnlockedAbility(Class<T> clazz, EntityPlayer player) {
 		if(player != null) {
 			return player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null).getUnlockedAbility(clazz);
 		}

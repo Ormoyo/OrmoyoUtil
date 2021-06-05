@@ -3,6 +3,10 @@ package com.ormoyo.ormoyoutil.util;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import com.google.common.collect.Maps;
 
 @SuppressWarnings("serial")
 public class ListHashMap<K, V> extends LinkedHashMap<K, V> {
@@ -48,5 +52,13 @@ public class ListHashMap<K, V> extends LinkedHashMap<K, V> {
             }
         }
         return null;
+    }
+    
+    public ListHashMap<V, K> inverse() {
+    	ListHashMap<V, K> inverse = new ListHashMap<>();
+    	for(Map.Entry<K, V> entry : this.entrySet()) {
+    		inverse.put(entry.getValue(), entry.getKey());
+    	}
+		return inverse;
     }
 }

@@ -2,6 +2,8 @@ package com.ormoyo.ormoyoutil.capability;
 
 import javax.annotation.Nullable;
 
+import com.ormoyo.ormoyoutil.capability.CapabilityHandler.AbiltyDataStorage;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.util.EnumFacing;
@@ -69,7 +71,7 @@ public class AbilityDataProvider<HANDLER> implements ICapabilitySerializable<NBT
 	@Nullable
 	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
 		if (capability == CapabilityHandler.CAPABILITY_PLAYER_DATA) {
-			return CapabilityHandler.CAPABILITY_PLAYER_DATA.cast((IAbiltyData) getInstance());
+			return CapabilityHandler.CAPABILITY_PLAYER_DATA.cast((IAbilityData) getInstance());
 		}
 
 		return null;

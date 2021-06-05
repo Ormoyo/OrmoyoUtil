@@ -13,21 +13,33 @@ import com.ormoyo.ormoyoutil.client.RenderHelper;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
 
 public class Shape implements Cloneable {
-    private String name;
-    private OBJModel model;
+    public final String name;
+    private final OBJModel model;
     private Shape parent;
-    private List<Face> faceList = Lists.newArrayList();
-    private List<Vertex> vertexList = Lists.newArrayList();
-    private List<TextureCoords> textureCoordsList = Lists.newArrayList();
-    private List<Normal> normalList = Lists.newArrayList();
-    private List<Shape> childList = Lists.newArrayList();
+    private final List<Face> faceList = Lists.newArrayList();
+    private final List<Vertex> vertexList = Lists.newArrayList();
+    private final List<TextureCoords> textureCoordsList = Lists.newArrayList();
+    private final List<Normal> normalList = Lists.newArrayList();
+    private final List<Shape> childList = Lists.newArrayList();
+    private int displayList;
+    private boolean compiled;
+    public boolean isHidden;
+    public float rotationPointX;
+    public float rotationPointY;
+    public float rotationPointZ;
+    public float rotateAngleX;
+    public float rotateAngleY;
+    public float rotateAngleZ;
+    public float offsetX;
+    public float offsetY;
+    public float offsetZ;
     
 
     public Shape(OBJModel model, String name) {
@@ -123,15 +135,94 @@ public class Shape implements Cloneable {
     }
     
     public void render(float scale) {
+    	if(!this.isHidden) {
+            if (!this.compiled)
+            {
+                this.compileDisplayList(scale);
+            }
+
+            GlStateManager.translate(this.offsetX, this.offsetY, this.offsetZ);
+
+            if (this.rotateAngleX == 0.0F && this.rotateAngleY == 0.0F && this.rotateAngleZ == 0.0F)
+            {
+                if (this.rotationPointX == 0.0F && this.rotationPointY == 0.0F && this.rotationPointZ == 0.0F)
+                {
+                    GlStateManager.callList(this.displayList);
+
+                    if (!this.childList.isEmpty())
+                    {
+                        for (int k = 0; k < this.childList.size(); ++k)
+                        {
+                            this.childList.get(k).render(scale);
+                        }
+                    }
+                }
+                else
+                {
+                    GlStateManager.translate(this.rotationPointX * scale, this.rotationPointY * scale, this.rotationPointZ * scale);
+                    GlStateManager.callList(this.displayList);
+
+                    if (this.childList != null)
+                    {
+                        for (int j = 0; j < this.childList.size(); ++j)
+                        {
+                            this.childList.get(j).render(scale);
+                        }
+                    }
+
+                    GlStateManager.translate(-this.rotationPointX * scale, -this.rotationPointY * scale, -this.rotationPointZ * scale);
+                }
+            }
+            else
+            {
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(this.rotationPointX * scale, this.rotationPointY * scale, this.rotationPointZ * scale);
+
+                if (this.rotateAngleZ != 0.0F)
+                {
+                    GlStateManager.rotate(this.rotateAngleZ * (180F / (float)Math.PI), 0.0F, 0.0F, 1.0F);
+                }
+
+                if (this.rotateAngleY != 0.0F)
+                {
+                    GlStateManager.rotate(this.rotateAngleY * (180F / (float)Math.PI), 0.0F, 1.0F, 0.0F);
+                }
+
+                if (this.rotateAngleX != 0.0F)
+                {
+                    GlStateManager.rotate(this.rotateAngleX * (180F / (float)Math.PI), 1.0F, 0.0F, 0.0F);
+                }
+
+                GlStateManager.callList(this.displayList);
+
+                if (this.childList != null)
+                {
+                    for (int i = 0; i < this.childList.size(); ++i)
+                    {
+                        this.childList.get(i).render(scale);
+                    }
+                }
+
+                GlStateManager.popMatrix();
+            }
+    	}
+    }
+    
+    private void compileDisplayList(float scale) {
+        this.displayList = GLAllocation.generateDisplayLists(1);
+        GlStateManager.glNewList(this.displayList, GL11.GL_COMPILE);
     	ResourceLocation prevTexture = null;
     	Tessellator tess = Tessellator.getInstance();
     	BufferBuilder bb = tess.getBuffer();
+    	GlStateManager.enableBlend();
     	RenderHelper.setupOpacity();
     	GlStateManager.alphaFunc(GL11.GL_GREATER, 0);
     	for(Face face : this.faceList) {
     		if(face.getMaterial().getTexture() != null && !face.getMaterial().getTexture().equals(prevTexture)) {
     			Minecraft.getMinecraft().getTextureManager().bindTexture(face.getMaterial().getTexture());
     			prevTexture = face.getMaterial().getTexture();
+    		}else if(face.getMaterial().getTexture() != prevTexture) {
+    			Minecraft.getMinecraft().getTextureManager().bindTexture(face.getMaterial().getTexture());
     		}
     		bb.begin(face.getType().mode, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
     		for(int i = 0; i < face.getVertices().size(); i++) {
@@ -144,6 +235,8 @@ public class Shape implements Cloneable {
     	}
     	GlStateManager.disableBlend();
     	GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1f);
+        GlStateManager.glEndList();
+        this.compiled = true;
     }
     
     public String getName() {
@@ -196,7 +289,6 @@ public class Shape implements Cloneable {
     	Shape shape = null;
     	try {
 			shape = (Shape) this.clone();
-			shape.model = model;
 		} catch (CloneNotSupportedException e) {
 			e.printStackTrace();
 		}
@@ -207,7 +299,6 @@ public class Shape implements Cloneable {
     protected Object clone() throws CloneNotSupportedException {
     	Shape shape = (Shape) super.clone();
     	String name = shape.name;
-    	shape.name = new String(name);
     	return shape;
     }
 }

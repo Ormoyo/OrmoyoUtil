@@ -1,16 +1,16 @@
 package com.ormoyo.ormoyoutil.util.resourcelocation;
 
-import com.ormoyo.ormoyoutil.util.Font;
-import com.ormoyo.ormoyoutil.util.Font.FontEntry;
+import com.ormoyo.ormoyoutil.util.FontHandler;
+import com.ormoyo.ormoyoutil.util.FontHandler.Font;
 
 import net.minecraft.util.SoundEvent;
 
 public class IconResourceLocation extends AdvancedResourceLocation {
 	private final double scale;
-	private final Font.FontEntry font;
+	private final FontHandler.Font font;
 	private final SoundEvent soundBeep;
 
-    protected IconResourceLocation(int unused, int u, int v, int width, int height, int imageWidth, int imageHeight, double scale, Font.FontEntry font, SoundEvent vocalBeep, String... resourceName)
+    protected IconResourceLocation(int unused, int u, int v, int width, int height, int imageWidth, int imageHeight, double scale, FontHandler.Font font, SoundEvent vocalBeep, String... resourceName)
     {
     	super(unused, u, v, width, height, imageWidth, imageHeight, resourceName);
     	this.scale = scale;
@@ -18,7 +18,7 @@ public class IconResourceLocation extends AdvancedResourceLocation {
     	this.soundBeep = vocalBeep;
     }
 
-    public IconResourceLocation(String resourceName, int u, int v ,int width, int height, int imageWidth, int imageHeight, double scale, Font.FontEntry font, SoundEvent vocalBeep)
+    public IconResourceLocation(String resourceName, int u, int v ,int width, int height, int imageWidth, int imageHeight, double scale, FontHandler.Font font, SoundEvent vocalBeep)
     {
         super(resourceName, u, v, width, height, imageWidth, imageHeight);
     	this.scale = scale;
@@ -26,7 +26,7 @@ public class IconResourceLocation extends AdvancedResourceLocation {
     	this.soundBeep = vocalBeep;
     }
 
-    public IconResourceLocation(String resourceDomainIn, String resourcePathIn, int u, int v, int width, int height, int imageWidth, int imageHeight, double scale, Font.FontEntry font, SoundEvent vocalBeep)
+    public IconResourceLocation(String resourceDomainIn, String resourcePathIn, int u, int v, int width, int height, int imageWidth, int imageHeight, double scale, FontHandler.Font font, SoundEvent vocalBeep)
     {
         super(resourceDomainIn, resourcePathIn, u, v, width, height, imageWidth, imageHeight);
     	this.scale = scale;
@@ -34,7 +34,7 @@ public class IconResourceLocation extends AdvancedResourceLocation {
     	this.soundBeep = vocalBeep;
     }
     
-    public IconResourceLocation(int u, int v, int width, int height, int imageWidth, int imageHeight, double scale, Font.FontEntry font, SoundEvent vocalBeep)
+    public IconResourceLocation(int u, int v, int width, int height, int imageWidth, int imageHeight, double scale, FontHandler.Font font, SoundEvent vocalBeep)
     {
         super(u, v, width, height, imageWidth, imageHeight);
     	this.scale = scale;
@@ -46,7 +46,7 @@ public class IconResourceLocation extends AdvancedResourceLocation {
     	return this.scale;
     }
     
-    public Font.FontEntry getFont() {
+    public FontHandler.Font getFont() {
     	return this.font;
     }
     

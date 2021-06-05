@@ -44,7 +44,7 @@ public class OBJModelEntry extends Impl<OBJModelEntry> {
 		return this.hasJsonFile;
 	}
 	
-	//This will return null until postInit phase
+	//This will return null until Init phase finishes
 	public OBJModel getModel() {
 		return this.model;
 	}

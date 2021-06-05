@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class MessageInvokeMethodOnClient extends AbstractMessage<MessageInvokeMethodOnClient> {
-	AbilityEntry entry;
+	ResourceLocation ability;
 	String methodName;
 	EntityPlayer player;
 	Object[] args;
@@ -31,7 +31,7 @@ public class MessageInvokeMethodOnClient extends AbstractMessage<MessageInvokeMe
 	}
 	
 	public MessageInvokeMethodOnClient(Ability ability, String methodName, EntityPlayer player, Object...args) {
-		this.entry = ability.getEntry();
+		this.ability = ability.getRegistryName();
 		this.methodName = methodName;
 		this.player = player;
 		this.args = args;
@@ -39,7 +39,7 @@ public class MessageInvokeMethodOnClient extends AbstractMessage<MessageInvokeMe
 	
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		this.entry = Ability.getRegistry().getValue(new ResourceLocation(ByteBufUtils.readUTF8String(buf)));
+		this.ability = new ResourceLocation(ByteBufUtils.readUTF8String(buf));
 		this.methodName = ByteBufUtils.readUTF8String(buf);
 		int argsSize = buf.readInt();
 		this.player = OrmoyoUtil.proxy.getPlayerByUsername(ByteBufUtils.readUTF8String(buf));
@@ -74,7 +74,7 @@ public class MessageInvokeMethodOnClient extends AbstractMessage<MessageInvokeMe
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeUTF8String(buf, this.entry.getRegistryName().toString());
+		ByteBufUtils.writeUTF8String(buf, this.ability.toString());
 		ByteBufUtils.writeUTF8String(buf, this.methodName);
 		buf.writeInt(this.args.length);
 		ByteBufUtils.writeUTF8String(buf, this.player.getName());
@@ -113,16 +113,16 @@ public class MessageInvokeMethodOnClient extends AbstractMessage<MessageInvokeMe
 
 	@Override
 	public void onClientReceived(Minecraft client, MessageInvokeMethodOnClient message, EntityPlayer player, MessageContext messageContext) {
-		if(message.entry != null) {
+		if(message.ability != null) {
 			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(player)) {
-				if(ability.getEntry().equals(message.entry)) {
+				if(ability.getRegistryName().equals(message.ability)) {
 					try {
 						Class<?>[] array = new Class<?>[message.args.length];
 						for(int i = 0; i < message.args.length; i++) {
 							array[i] = message.args[i].getClass();
 						}
 						Method method = ability.getClass().getDeclaredMethod(message.methodName, array);
-						if(method.isAnnotationPresent(AbilitySyncedValue.OnlyInvokableForClient.class) || !method.isAnnotationPresent(AbilitySyncedValue.InvokableMethod.class)) return;
+						if(method.isAnnotationPresent(AbilitySyncedValue.OnlyInvokableForClient.class) || !method.isAnnotationPresent(AbilitySyncedValue.InvokableMethod.class) && !method.isAnnotationPresent(AbilitySyncedValue.OnlyInvokableForServer.class)) return;
 						method.setAccessible(true);
 						method.invoke(ability, message.args);
 					} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
@@ -135,11 +135,5 @@ public class MessageInvokeMethodOnClient extends AbstractMessage<MessageInvokeMe
 
 	@Override
 	public void onServerReceived(MinecraftServer server, MessageInvokeMethodOnClient message, EntityPlayer player, MessageContext messageContext) {
-	}
-
-	@Override
-	public IMessage onMessage(MessageInvokeMethodOnClient message, MessageContext ctx) {
-		
-		return null;
 	}
 }

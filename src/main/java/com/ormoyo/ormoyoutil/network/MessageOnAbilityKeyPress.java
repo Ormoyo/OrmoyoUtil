@@ -1,9 +1,8 @@
 package com.ormoyo.ormoyoutil.network;
 
 import com.ormoyo.ormoyoutil.abilities.Ability;
-import com.ormoyo.ormoyoutil.abilities.AbilityEntry;
 import com.ormoyo.ormoyoutil.capability.CapabilityHandler;
-import com.ormoyo.ormoyoutil.capability.IAbiltyData;
+import com.ormoyo.ormoyoutil.capability.IAbilityData;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -14,23 +13,23 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class MessageOnAbilityKeyPress extends AbstractMessage<MessageOnAbilityKeyPress> {
-	AbilityEntry entry;
+	ResourceLocation ability;
 
 	public MessageOnAbilityKeyPress() {
 	}
 	
 	public MessageOnAbilityKeyPress(Ability ability) {
-		this.entry = ability.getEntry();
+		this.ability = ability.getRegistryName();
 	}
 	
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		this.entry = Ability.getRegistry().getValue(new ResourceLocation(ByteBufUtils.readUTF8String(buf)));
+		this.ability = new ResourceLocation(ByteBufUtils.readUTF8String(buf));
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeUTF8String(buf, entry.toString());
+		ByteBufUtils.writeUTF8String(buf, ability.toString());
 	}
 
 	@Override
@@ -40,9 +39,9 @@ public class MessageOnAbilityKeyPress extends AbstractMessage<MessageOnAbilityKe
 
 	@Override
 	public void onServerReceived(MinecraftServer server, MessageOnAbilityKeyPress message, EntityPlayer player, MessageContext messageContext) {
-		IAbiltyData capability = player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
+		IAbilityData capability = player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
 		for(Ability ability : capability.getUnlockedAbilities()) {
-			if(ability.getEntry().equals(message.entry)) {
+			if(ability.getRegistryName().equals(message.ability)) {
 				ability.onKeyPress();
 			}
 		}

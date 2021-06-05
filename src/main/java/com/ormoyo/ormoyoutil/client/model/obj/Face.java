@@ -6,12 +6,12 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 public class Face {
-    private Shape parentShape;
-    private Material material;
-    private PolygonType type;
-    private List<Vertex> vertexList = Lists.newArrayList();
-    private List<TextureCoords> textureCoordsList = Lists.newArrayList();
-    private List<Normal> normalList = Lists.newArrayList();
+    private final Shape parentShape;
+    private final Material material;
+    private final PolygonType type;
+    private final List<Vertex> vertexList = Lists.newArrayList();
+    private final List<TextureCoords> textureCoordsList = Lists.newArrayList();
+    private final List<Normal> normalList = Lists.newArrayList();
 
     public Face(Shape shape) {
     	this(shape, PolygonType.POLYGON);

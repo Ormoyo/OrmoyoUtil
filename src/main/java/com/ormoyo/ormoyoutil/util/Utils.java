@@ -2,6 +2,7 @@ package com.ormoyo.ormoyoutil.util;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -10,14 +11,21 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.lwjgl.input.Keyboard;
+
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
+import com.ormoyo.ormoyoutil.client.GuiSomething;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -28,8 +36,10 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -43,7 +53,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class Utils {
 	private static final Set<ITick> tickables = Sets.newHashSet();
 	private static final Set<Animation> animations = Sets.newHashSet();
+	private static final Multimap<Class<? extends Event>, Consumer<Event>> eventconsumers = ArrayListMultimap.create();
 	
+	public static void performConsumerOnEvent(Class<? extends Event> event, Consumer<Event> consumer) {
+		eventconsumers.put(event, consumer);
+	}
 	/**
 	 * Performs a consumer after amount of ticks
 	 * @param consumer The consumer to perform
@@ -334,6 +348,10 @@ public class Utils {
 				}
 				for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
 					Animation anim = iterator.next();
+					if(anim.removed) {
+						iterator.remove();
+						return;
+					}
 					anim.onUpdate(iterator);
 				}
 			}
@@ -342,7 +360,12 @@ public class Utils {
 		@SubscribeEvent(priority = EventPriority.LOW)
 		@SideOnly(Side.CLIENT)
 		public static void onRenderOverlay(RenderGameOverlayEvent.Pre event) {
-			for(Animation animation : animations) {
+			for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
+				Animation animation = iterator.next();
+				if(animation.removed) {
+					iterator.remove();
+					return;
+				}
 				animation.renderPreOverlay(event);
 			}
 		}
@@ -350,7 +373,12 @@ public class Utils {
 		@SubscribeEvent(priority = EventPriority.LOW)
 		@SideOnly(Side.CLIENT)
 		public static void onRenderOverlay(RenderGameOverlayEvent.Post event) {
-			for(Animation animation : animations) {
+			for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
+				Animation animation = iterator.next();
+				if(animation.removed) {
+					iterator.remove();
+					return;
+				}
 				animation.renderPostOverlay(event);
 			}
 		}
@@ -358,7 +386,12 @@ public class Utils {
 		@SubscribeEvent(priority = EventPriority.LOW)
 		@SideOnly(Side.CLIENT)
 		public static void onRenderWorld(RenderWorldLastEvent event) {
-			for(Animation animation : animations) {
+			for(Iterator<Animation> iterator = animations.iterator(); iterator.hasNext();) {
+				Animation animation = iterator.next();
+				if(animation.removed) {
+					iterator.remove();
+					return;
+				}
 				animation.renderWorld(event);
 			}
 		}
@@ -368,6 +401,18 @@ public class Utils {
 		public static void onDisconnectionFromServer(ClientDisconnectionFromServerEvent event) {
 			tickables.clear();
 			animations.clear();
+		}
+		
+		@SubscribeEvent
+		public static void onEvent(Event event) {
+			Collection<Consumer<Event>> consumers = eventconsumers.get(event.getClass());
+			if(!consumers.isEmpty()) {
+				for(Iterator<Consumer<Event>> iterator = consumers.iterator(); iterator.hasNext();) {
+					Consumer<Event> consumer = iterator.next();
+					consumer.accept(event);
+					iterator.remove();
+				}
+			}
 		}
 	}
 }

@@ -1,31 +1,20 @@
 package com.ormoyo.ormoyoutil.abilities;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.List;
 import java.util.Map.Entry;
 
-import javax.annotation.Nonnull;
-
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
-import com.ormoyo.ormoyoutil.capability.CapabilityHandler;
-import com.ormoyo.ormoyoutil.capability.IAbiltyData;
-import com.ormoyo.ormoyoutil.client.RenderHelper;
 import com.ormoyo.ormoyoutil.capability.AbilityData;
-import com.ormoyo.ormoyoutil.event.AbilityEvent;
-import com.ormoyo.ormoyoutil.event.StatsEvent;
+import com.ormoyo.ormoyoutil.capability.CapabilityHandler;
+import com.ormoyo.ormoyoutil.capability.IAbilityData;
 import com.ormoyo.ormoyoutil.proxy.ClientProxy;
-import com.ormoyo.ormoyoutil.util.icon.IIcon;
-
+import com.ormoyo.ormoyoutil.util.TripleKeyMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -33,7 +22,6 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.event.InputUpdateEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -41,20 +29,30 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderSpecificHandEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteract;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickEmpty;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent.MouseInputEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -65,10 +63,12 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryBuilder;
+import net.minecraftforge.registries.IForgeRegistryEntry.Impl;
 
 public abstract class Ability {
-	public Ability(@Nonnull EntityPlayer owner) {
+	public Ability(EntityPlayer owner) {
 		this.owner = owner;
+		this.registryName = getAbilityClassRegistryName(this.getClass());
 	}
 	
 	protected boolean hasBeenPressed;
@@ -76,7 +76,7 @@ public abstract class Ability {
 	protected boolean startCooldown;
 	
 	protected final EntityPlayer owner;
-	private AbilityEntry entry;
+	private final ResourceLocation registryName;
 	protected boolean isEnabled = true;
 	
 	public void onKeyPress() {}
@@ -91,103 +91,9 @@ public abstract class Ability {
 	public void onUpdate() {}
 	/**
 	 * Called when a player unlocks this ability
+	 * @param object 
 	 */
-	public void onUnlocked(AbilityEvent.OnAbilityUnlockedEvent event) {}
-	/**
-	 * Called when a {@link LivingAttackEvent} related to the ability owner occurred i.e. the owner attacked or has been attacked by an entity
-	 */
-	public void onAttackEvent(LivingAttackEvent event) {}
-	public void onAttackEntity(AttackEntityEvent event) {}
-	/**
-	 * Called when a {@link LivingKnockBackEvent} related to the ability owner occurred i.e. the owner got knocked back or has knocked back an entity
-	 */
-	public void onKnockBackEvent(LivingKnockBackEvent event) {}
-	/**
-	 * Called when the ability owner got shot by a projectile
-	 */
-	public void onProjectileImpact(ProjectileImpactEvent event) {}
-	/**
-	 * Called when a {@link LivingDeathEvent} involving to the ability owner occurred i.e. the owner died or has killed an entity
-	 */
-	public void onDeathEvent(LivingDeathEvent event) {}
-	
-	public void onEntityInteractSpecificEvent(PlayerInteractEvent.EntityInteractSpecific event) {}
-	public void onEntityInteractEvent(PlayerInteractEvent.EntityInteract event) {}
-	public void onBlockLeftClick(PlayerInteractEvent.LeftClickBlock event) {}
-	public void onBlockRightClick(PlayerInteractEvent.RightClickBlock event) {}
-	public void onEmptyLeftClick(PlayerInteractEvent.LeftClickEmpty event) {}
-	public void onEmptyRightClick(PlayerInteractEvent.RightClickEmpty event) {}
-	/**
-	 * Called every frame
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onRenderUpdate(float partialTicks) {}
-	/**
-	 * Called when a {@link RenderGameOverlayEvent.Pre} event involving the ability owner overlay occured
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onPreRenderOverlayEvent(RenderGameOverlayEvent.Pre event) {}
-	/**
-	 * Called when a {@link RenderGameOverlayEvent.Post} event involving the ability owner overlay occured
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onPostRenderOverlayEvent(RenderGameOverlayEvent.Post event) {}
-	/**
-	 * Called when a {@link RenderPlayerEvent.Pre} involving the ability owner occured
-	 * @apiNote Called even if first person
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onPrePlayerRender(RenderPlayerEvent.Pre event) {}
-	/**
-	 * Called when a {@link RenderPlayerEvent.Post} involving the ability owner occured
-	 * @apiNote Called even if first person
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onPostPlayerRender(RenderPlayerEvent.Post event) {}
-	/**
-	 * Called when a {@link ActionPerformedEvent} involving the ability owner occurred i.e. the owner has clicked a button in a gui
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onButtonPressInGui(GuiScreenEvent.ActionPerformedEvent event) {}
-	/**
-	 * Called when the ability owner inputs are updated
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onInputUpdate(InputUpdateEvent event) {}
-	/**
-	 * Called when a mouse input from the ability owner occurred
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onMouseEvent(MouseEvent event) {}
-	/**
-	 * Basically {@linkplain #onMouseEvent(MouseEvent)} but called after it
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onMouseInput(MouseInputEvent event) {}
-	/**
-	 * Called when a key input from the ability owner occurred
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onKeyInput(KeyInputEvent event) {}
-	/**
-	 * Called when a {@link CameraSetup} involving the ability owner camera occurred
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onCameraUpdate(CameraSetup event) {}
-	/**
-	 * Called when a {@link RenderSpecificHandEvent} involving the ability owner hands occurred
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onHandRender(RenderSpecificHandEvent event) {}
-	/**
-	 * Called on the ability owner client when disconnected from server
-	 */
-	@SideOnly(Side.CLIENT)
-	public void onClientDisconnectedFromServer(ClientDisconnectionFromServerEvent event) {}
-	/**
-	 * Called on the server when the ability owner logges off
-	 */
-	public void onLoggedOut(PlayerLoggedOutEvent event) {}
+	public void onUnlocked() {}
 	
 	public void writeToNBT(NBTTagCompound compound) {}
 	public void readFromNBT(NBTTagCompound compound) {}
@@ -201,7 +107,7 @@ public abstract class Ability {
 	 */
 	@SideOnly(Side.CLIENT)
 	public KeyBinding getKeybind() {
-		ResourceLocation location = this.getEntry().getRegistryName();
+		ResourceLocation location = this.registryName;
 		if(this.getKeybindCode() >= 0) {
 			for(KeyBinding keybind : Minecraft.getMinecraft().gameSettings.keyBindings) {
 				if(keybind.getKeyDescription().equals("key." + location.getResourceDomain() + "." + location.getResourcePath())) {
@@ -214,14 +120,14 @@ public abstract class Ability {
 	
 	public void setIsEnabled(boolean isEnabled) {
 		this.isEnabled = isEnabled;
-		if(isEnabled == false) {
+		if(!isEnabled) {
 			this.onAbilityDisabled();
 			AbilitySyncedValue.invokeMethod(this, "setIsEnabled", isEnabled);
 		}
 	}
 	
 	/**
-	 * If the ability is not enabled all it's methods are not gonna get called
+	 * If the ability is disabled all it's methods are not gonna get called
 	 */
 	public boolean isEnabled() {
 		return this.isEnabled;
@@ -246,20 +152,25 @@ public abstract class Ability {
 	}
 	
 	public String getName() {
-		return this.entry.getRegistryName().toString();
+		return this.registryName.toString();
 	}
 	
 	public ITextComponent getTranslatedName() {
-		return new TextComponentTranslation("ability." + this.getEntry().getRegistryName().getResourceDomain() + "." + this.getEntry().getRegistryName().getResourcePath() + ".name");
+		return new TextComponentTranslation("ability." + this.registryName.getResourceDomain() + "." + this.registryName.getResourcePath() + ".name");
 	}
 	
-	public AbilityEntry getEntry() {
-		return this.entry;
+	public ResourceLocation getRegistryName() {
+		return this.registryName;
 	}
 	
 	private static IForgeRegistry<AbilityEntry> ABILITY_REGISTRY;
-	public static IForgeRegistry<AbilityEntry> getRegistry() {
+	public static IForgeRegistry<AbilityEntry> getAbilityRegistry() {
 		return ABILITY_REGISTRY;
+	}
+	
+	private static IForgeRegistry<AbilityEventEntry> ABILITY_EVENT_REGISTRY;
+	public static IForgeRegistry<AbilityEventEntry> getAbilityEventRegistry(){
+		return ABILITY_EVENT_REGISTRY;
 	}
 	
 	@Override
@@ -272,8 +183,8 @@ public abstract class Ability {
 		if(this == obj) return true;
 		if(obj instanceof Ability) {
 			Ability ability = (Ability)obj;
-			if(this.getEntry() != null && ability.getEntry() != null) {
-				if(this.getEntry().getRegistryName().equals(ability.getEntry().getRegistryName())) {
+			if(this.registryName != null && ability.registryName != null) {
+				if(this.registryName.equals(ability.registryName)) {
 					return true;
 				}
 			}
@@ -282,7 +193,7 @@ public abstract class Ability {
 	}
 	
 	public static ResourceLocation getAbilityClassRegistryName(Class<? extends Ability> clazz) {
-		for(Entry<ResourceLocation, AbilityEntry> entry : Ability.getRegistry().getEntries()) {
+		for(Entry<ResourceLocation, AbilityEntry> entry : Ability.getAbilityRegistry().getEntries()) {
 			if(entry.getValue().getAbilityClass() == clazz) {
 				return entry.getKey();
 			}
@@ -295,346 +206,270 @@ public abstract class Ability {
 	}
 	
 	@EventBusSubscriber(modid = OrmoyoUtil.MODID)
-	private static class EventHandler {
+	static class EventHandler {
 		//COMMON SIDE
 		@SubscribeEvent
 		public static void onNewRegistry(RegistryEvent.NewRegistry event) {
 			ABILITY_REGISTRY = new RegistryBuilder<AbilityEntry>().setName(new ResourceLocation(OrmoyoUtil.MODID, "ability")).setType(AbilityEntry.class).setIDRange(0, 2048).create();
+			ABILITY_EVENT_REGISTRY = new RegistryBuilder<AbilityEventEntry>().setName(new ResourceLocation(OrmoyoUtil.MODID, "ability_event")).setType(AbilityEventEntry.class).setIDRange(0, 2048).create();	
 		}
 		
 		@SubscribeEvent
-		public static void onLivingDeath(LivingDeathEvent event) {
-			if(event.getSource().getTrueSource() instanceof EntityPlayer) {
-				EntityPlayer player = (EntityPlayer)event.getSource().getTrueSource();
-				IAbiltyData capability = player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
-				for(Ability ability : capability.getUnlockedAbilities()) {
-					if(ability.isEnabled()) {
-						ability.onDeathEvent(event);
-					}
-				}
-			}else if(event.getEntityLiving() instanceof EntityPlayer) {
-				EntityPlayer player = (EntityPlayer)event.getEntityLiving();
-				IAbiltyData capability = player.getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
-				for(Ability ability : capability.getUnlockedAbilities()) {
-					if(ability.isEnabled()) {
-						ability.onDeathEvent(event);
-					}
-				}
-			}
+		public static void registerAbilities(RegistryEvent.Register<AbilityEntry> event) {
+			event.getRegistry().register(new AbilityEntry(new ResourceLocation(OrmoyoUtil.MODID, "stats"), AbilityStats.class));
 		}
 		
 		@SubscribeEvent
-		public static void onEntityAttack(LivingAttackEvent event) {
-			if(event.getEntityLiving() instanceof EntityPlayer) {
-				EntityPlayer player = (EntityPlayer)event.getEntityLiving();
-				Set<Ability> set = OrmoyoUtil.proxy.getUnlockedAbilities(player);
-				for(Ability ability : set) {
-					if(ability.isEnabled()) {
-						ability.onAttackEvent(event);
-					}
-				}
-				return;
-			}
-			if(event.getSource().getTrueSource() instanceof EntityPlayer) {
-				EntityPlayer player = (EntityPlayer)event.getSource().getTrueSource();
-				Set<Ability> set = OrmoyoUtil.proxy.getUnlockedAbilities(player);
-				for(Ability ability : set) {
-					if(ability.isEnabled()) {
-						ability.onAttackEvent(event);
-					}
-				}
-			}
+		public static void registerAbilityEventInvokers(RegistryEvent.Register<AbilityEventEntry> event) {
+			register(event, EntityEvent.class, ENTITY_EVENT);
+			register(event, PlayerEvent.class, PLAYER_EVENT);
+			register(event, LivingAttackEvent.class, LIVING_ATTACK_EVENT);
+			register(event, LivingDeathEvent.class, LIVING_DEATH_EVENT);
+			register(event, LivingKnockBackEvent.class, LIVING_KNOCKBACK_EVENT);
+			register(event, ProjectileImpactEvent.class, PROJECTILE_IMPACT_EVENT);
+			register(event, ProjectileImpactEvent.Arrow.class, PROJECTILE_IMPACT_ARROW_EVENT);
+			register(event, ProjectileImpactEvent.Fireball.class, PROJECTILE_IMPACT_FIREBALL_EVENT);
+			register(event, ProjectileImpactEvent.Throwable.class, PROJECTILE_IMPACT_THROWABLE_EVENT);
+			register(event, ClientTickEvent.class, CLIENT_TICK_EVENT);
+			register(event, RenderTickEvent.class, RENDER_TICK_EVENT);
+			register(event, RenderGameOverlayEvent.class, RENDER_GAME_OVERLAY_EVENT);
+			register(event, RenderLivingEvent.class, RENDER_LIVING_EVENT);
+			register(event, RenderPlayerEvent.class, RENDER_PLAYER_EVENT);
+			register(event, InputUpdateEvent.class, INPUT_UPDATE_EVENT);
+			register(event, CameraSetup.class, CAMERA_SETUP_EVENT);
+			register(event, MouseEvent.class, MOUSE_EVENT);
+			register(event, MouseInputEvent.class, MOUSE_INPUT_EVENT);
+			register(event, KeyInputEvent.class, KEY_INPUT_EVENT);
+			register(event, RenderSpecificHandEvent.class, RENDER_SPECIFIC_HAND_EVENT);
+			register(event, ClientDisconnectionFromServerEvent.class, CLIENT_DISCONNECTION_FROM_SERVER_EVENT);
 		}
 		
 		@SubscribeEvent
-		public static void onEntityKnockback(LivingKnockBackEvent event) {
-			if(event.getEntityLiving() instanceof EntityPlayer) {
-				EntityPlayer player = (EntityPlayer)event.getEntityLiving();
-				Set<Ability> set = OrmoyoUtil.proxy.getUnlockedAbilities(player);
-				for(Ability ability : set) {
-					if(ability.isEnabled()) {
-						ability.onKnockBackEvent(event);
-					}
-				}
-			}else if(event.getAttacker() instanceof EntityPlayer) {
-				EntityPlayer player = (EntityPlayer)event.getAttacker();
-				Set<Ability> set = OrmoyoUtil.proxy.getUnlockedAbilities(player);
-				for(Ability ability : set) {
-					if(ability.isEnabled()) {
-						ability.onKnockBackEvent(event);
-					}
-				}
-			}
+		@SideOnly(Side.CLIENT)
+		public static void registerAbilityEventInvokersOnClient(RegistryEvent.Register<AbilityEventEntry> event) {
+			register(event, GuiScreenEvent.class, GUI_SCREEN_EVENT);
 		}
 		
-		@SubscribeEvent
-		public static void onAttackEntity(AttackEntityEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
-				if(ability.isEnabled()) {
-					ability.onAttackEntity(event);
-				}
-			}
+		private static<T extends Event> void register(RegistryEvent.Register<AbilityEventEntry> event, Class<T> clazz, IAbilityEventInvoker<T> invoker) {
+			String name = Character.toLowerCase(clazz.getSimpleName().charAt(0)) + clazz.getSimpleName().substring(1);
+			event.getRegistry().register(new AbilityEventEntry(new ResourceLocation(OrmoyoUtil.MODID, name), clazz, invoker));
 		}
 		
-		@SubscribeEvent
-		public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
-				if(ability.isEnabled()) {
-					ability.onEntityInteractSpecificEvent(event);
-				}
+		public static final IAbilityEventInvoker<EntityEvent> ENTITY_EVENT = new IAbilityEventInvoker<EntityEvent>() {
+			@Override
+			public boolean invoke(Ability ability, EntityEvent event) {
+				return event.getEntity() == ability.owner;
 			}
-		}
+		};
 		
-		@SubscribeEvent
-		public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteract event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
-				if(ability.isEnabled()) {
-					ability.onEntityInteractEvent(event);
-				}
+		public static final IAbilityEventInvoker<LivingAttackEvent> LIVING_ATTACK_EVENT = new IAbilityEventInvoker<LivingAttackEvent>() {
+			@Override
+			public boolean invoke(Ability ability, LivingAttackEvent event) {
+				return event.getEntityLiving() == ability.owner || event.getSource().getTrueSource() == ability.owner;
 			}
-		}
+		};
 		
-		@SubscribeEvent
-		public static void onBlockLeftClick(PlayerInteractEvent.LeftClickBlock event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
-				if(ability.isEnabled()) {
-					ability.onBlockLeftClick(event);
-				}
+		public static final IAbilityEventInvoker<LivingDeathEvent> LIVING_DEATH_EVENT = new IAbilityEventInvoker<LivingDeathEvent>() {
+			@Override
+			public boolean invoke(Ability ability, LivingDeathEvent event) {
+				return event.getEntityLiving() == ability.owner || event.getSource().getTrueSource() == ability.owner;
 			}
-		}
+		};
 		
-		@SubscribeEvent
-		public static void onBlockRightClick(PlayerInteractEvent.RightClickBlock event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
-				if(ability.isEnabled()) {
-					ability.onBlockRightClick(event);
-				}
+		public static final IAbilityEventInvoker<LivingKnockBackEvent> LIVING_KNOCKBACK_EVENT = new IAbilityEventInvoker<LivingKnockBackEvent>() {
+			@Override
+			public boolean invoke(Ability ability, LivingKnockBackEvent event) {
+				return event.getEntityLiving() == ability.owner || event.getAttacker() == ability.owner;
 			}
-		}
+		};
 		
-		@SubscribeEvent
-		public static void onEmptyLeftClick(PlayerInteractEvent.LeftClickEmpty event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
-				if(ability.isEnabled()) {
-					ability.onEmptyLeftClick(event);
-				}
+		public static final IAbilityEventInvoker<ProjectileImpactEvent> PROJECTILE_IMPACT_EVENT = new IAbilityEventInvoker<ProjectileImpactEvent>() {
+			@Override
+			public boolean invoke(Ability ability, ProjectileImpactEvent event) {
+				return event.getRayTraceResult().entityHit == ability.owner;
 			}
-		}
+		};
 		
-		@SubscribeEvent
-		public static void onEmptyRightClick(PlayerInteractEvent.RightClickEmpty event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.getEntityPlayer())) {
-				if(ability.isEnabled()) {
-					ability.onEmptyRightClick(event);
-				}
+		public static final IAbilityEventInvoker<ProjectileImpactEvent.Arrow> PROJECTILE_IMPACT_ARROW_EVENT = new IAbilityEventInvoker<ProjectileImpactEvent.Arrow>() {
+			@Override
+			public boolean invoke(Ability ability, ProjectileImpactEvent.Arrow event) {
+				return event.getRayTraceResult().entityHit == ability.owner || event.getArrow().shootingEntity == ability.owner;
 			}
-		}
+		};
+		
+		public static final IAbilityEventInvoker<ProjectileImpactEvent.Fireball> PROJECTILE_IMPACT_FIREBALL_EVENT = new IAbilityEventInvoker<ProjectileImpactEvent.Fireball>() {
+			@Override
+			public boolean invoke(Ability ability, ProjectileImpactEvent.Fireball event) {
+				return event.getRayTraceResult().entityHit == ability.owner || event.getFireball().shootingEntity == ability.owner;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<ProjectileImpactEvent.Throwable> PROJECTILE_IMPACT_THROWABLE_EVENT = new IAbilityEventInvoker<ProjectileImpactEvent.Throwable>() {
+			@Override
+			public boolean invoke(Ability ability, ProjectileImpactEvent.Throwable event) {
+				return event.getRayTraceResult().entityHit == ability.owner || event.getThrowable().getThrower() == ability.owner;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<PlayerEvent> PLAYER_EVENT = new IAbilityEventInvoker<PlayerEvent>() {
+			@Override
+			public boolean invoke(Ability ability, PlayerEvent event) {
+				return event.player == ability.owner;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<ClientTickEvent> CLIENT_TICK_EVENT = new IAbilityEventInvoker<ClientTickEvent>() {
+			@Override
+			public boolean invoke(Ability ability, ClientTickEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<RenderTickEvent> RENDER_TICK_EVENT = new IAbilityEventInvoker<RenderTickEvent>() {
+			@Override
+			public boolean invoke(Ability ability, RenderTickEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<RenderGameOverlayEvent> RENDER_GAME_OVERLAY_EVENT = new IAbilityEventInvoker<RenderGameOverlayEvent>() {
+			@Override
+			public boolean invoke(Ability ability, RenderGameOverlayEvent event) {
+				return true;
+			}
+		};
+		
+		@SuppressWarnings("rawtypes")
+		public static final IAbilityEventInvoker<RenderLivingEvent> RENDER_LIVING_EVENT = new IAbilityEventInvoker<RenderLivingEvent>() {
+			@Override
+			public boolean invoke(Ability ability, RenderLivingEvent event) {
+				return event.getEntity() != ability.owner;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<RenderPlayerEvent> RENDER_PLAYER_EVENT = new IAbilityEventInvoker<RenderPlayerEvent>() {
+			@Override
+			public boolean invoke(Ability ability, RenderPlayerEvent event) {
+				return event.getEntityPlayer() == ability.owner;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<GuiScreenEvent> GUI_SCREEN_EVENT = new IAbilityEventInvoker<GuiScreenEvent>() {
+			@Override
+			public boolean invoke(Ability ability, GuiScreenEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<InputUpdateEvent> INPUT_UPDATE_EVENT = new IAbilityEventInvoker<InputUpdateEvent>() {
+			@Override
+			public boolean invoke(Ability ability, InputUpdateEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<CameraSetup> CAMERA_SETUP_EVENT = new IAbilityEventInvoker<CameraSetup>() {
+			@Override
+			public boolean invoke(Ability ability, CameraSetup event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<MouseEvent> MOUSE_EVENT = new IAbilityEventInvoker<MouseEvent>() {
+			@Override
+			public boolean invoke(Ability ability, MouseEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<MouseInputEvent> MOUSE_INPUT_EVENT = new IAbilityEventInvoker<MouseInputEvent>() {
+			@Override
+			public boolean invoke(Ability ability, MouseInputEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<KeyInputEvent> KEY_INPUT_EVENT = new IAbilityEventInvoker<KeyInputEvent>() {
+			@Override
+			public boolean invoke(Ability ability, KeyInputEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<RenderSpecificHandEvent> RENDER_SPECIFIC_HAND_EVENT = new IAbilityEventInvoker<RenderSpecificHandEvent>() {
+			@Override
+			public boolean invoke(Ability ability, RenderSpecificHandEvent event) {
+				return true;
+			}
+		};
+		
+		public static final IAbilityEventInvoker<ClientDisconnectionFromServerEvent> CLIENT_DISCONNECTION_FROM_SERVER_EVENT = new IAbilityEventInvoker<ClientDisconnectionFromServerEvent>() {
+			@Override
+			public boolean invoke(Ability ability, ClientDisconnectionFromServerEvent event) {
+				return true;
+			}
+		};
 		
 		@SubscribeEvent
 		public static void onPlayerTickEvent(PlayerTickEvent event) {
-			if(event.side.equals(Side.SERVER) && event.phase == Phase.END) {
-				for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.player)) {
-					if(ability.isEnabled()) {
-						ability.onUpdate();
-					}
-				}
-			}
-		}
-		
-		private static Set<Ability> unlockedAbilities = Sets.newHashSet();
-		
-		@SubscribeEvent
-		public static void onProjectileImpact(ProjectileImpactEvent event) {
-			if(event.getRayTraceResult().entityHit instanceof EntityPlayer) {
-				for(Ability ability : unlockedAbilities) {
-					if(ability.isEnabled()) {
-						ability.onProjectileImpact(event);
-					}
-				}
-			}
-		}
-		
-		@SubscribeEvent
-		public static void onAbilityUnlock(AbilityEvent.OnAbilityUnlockedEvent event) {
-			event.getAbility().onUnlocked(event);
-			unlockedAbilities.add(event.getAbility());
-		}
-		
-		@SubscribeEvent
-		public static void onPlayerLoggedOut(PlayerLoggedOutEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.player)) {
-				if(ability.isEnabled()) {
-					ability.onLoggedOut(event);
-				}
-			}
-		}
-		
-		//CLIENT SIDE
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onClientTick(ClientTickEvent event) {
 			if(event.phase == Phase.END) {
-				for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-					if(ability.isEnabled()) {
-						ability.onUpdate();
+				if(event.side.equals(Side.SERVER)) {
+					for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.player)) {
+						if(ability.isEnabled()) {
+							ability.onUpdate();
+						}
+					}
+				}else {
+					for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(event.player)) {
+						if(ability.isEnabled()) {
+							ability.onUpdate();
+						}
 					}
 				}
 			}
 		}
 		
-		@SideOnly(Side.CLIENT)
 		@SubscribeEvent
-		public static void onGameRenderTick(RenderTickEvent event) {
-			if(event.phase == Phase.END) {
-				for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-					if(ability.isEnabled()) {
-						ability.onRenderUpdate(event.renderTickTime);
-					}
+		public static void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone event) {
+			if(event.isWasDeath()) {
+				IAbilityData o = event.getOriginal().getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
+				IAbilityData n = event.getEntityPlayer().getCapability(CapabilityHandler.CAPABILITY_PLAYER_DATA, null);
+				if(n instanceof AbilityData && o instanceof AbilityData) {
+					AbilityData oldcap = (AbilityData) o;
+					AbilityData newcap = (AbilityData) n;
+					ObfuscationReflectionHelper.setPrivateValue(AbilityData.class, newcap, oldcap.getPlayer(), "player");
+					ObfuscationReflectionHelper.setPrivateValue(AbilityData.class, newcap, oldcap.getUnlockedAbilities(), "unlockedAbilities");
+					ObfuscationReflectionHelper.setPrivateValue(AbilityData.class, newcap, ObfuscationReflectionHelper.getPrivateValue(AbilityData.class, oldcap, "eventToListener"), "eventToListener");
 				}
 			}
 		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onGameOverlay(RenderGameOverlayEvent.Pre event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onPreRenderOverlayEvent(event);
-				}
-			}
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static class AbilityEventEntry extends Impl<AbilityEventEntry> {
+		private final Class<? extends Event> event;
+		private final IAbilityEventInvoker<? extends Event> invoker;
+		public<T extends Event> AbilityEventEntry(ResourceLocation name, Class<T> event, IAbilityEventInvoker<T> invoker) {
+			this.setRegistryName(name);
+			this.event = event;
+			this.invoker = invoker;
 		}
 		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onGameOverlay(RenderGameOverlayEvent.Post event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onPostRenderOverlayEvent(event);
-				}
-			}
+		public Class<? extends Event> getEventClass(){
+			return this.event;
 		}
 		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onRender(RenderLivingEvent.Post<EntityLivingBase> event) {
-			if(event.getEntity() instanceof IIcon) {
-				GlStateManager.pushMatrix();
-				GlStateManager.translate(event.getX(), event.getY() + event.getEntity().getRenderBoundingBox().maxY, event.getZ());
-				GlStateManager.disableLighting();
-				GlStateManager.rotate(-event.getRenderer().getRenderManager().playerViewY, 0, 1, 0);
-				RenderHelper.drawTexturedRect(new ResourceLocation(OrmoyoUtil.MODID, "textures/gui/undercraft_text_box.png"), -1.2, 0, 0, 0, 256, 67, 3, 1, 256, 256, 1, 1);
-				GlStateManager.rotate(-event.getRenderer().getRenderManager().playerViewY, 0, -1, 0);
-		        GlStateManager.enableLighting();
-				GlStateManager.popMatrix();
-			}
+		public IAbilityEventInvoker getEventInvoker() {
+			return this.invoker;
 		}
 		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onPlayerRender(RenderPlayerEvent.Pre event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onPrePlayerRender(event);
-				}
-			}
+		@Override
+		public String toString() {
+			return this.event.getName();
 		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onPlayerRender(RenderPlayerEvent.Post event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onPostPlayerRender(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onGuiActionPerformed(GuiScreenEvent.ActionPerformedEvent.Pre event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onButtonPressInGui(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onInputUpdate(InputUpdateEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onInputUpdate(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onCameraUpdate(CameraSetup event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onCameraUpdate(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onMouseEvent(MouseEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onMouseEvent(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onMouseEvent(MouseInputEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onMouseInput(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onKeyInput(KeyInputEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onKeyInput(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SubscribeEvent
-		public static void onRenderHand(RenderSpecificHandEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onHandRender(event);
-				}
-			}
-		}
-		
-		@SideOnly(Side.CLIENT)
-		@SuppressWarnings("unchecked")
-		@SubscribeEvent
-		public static void onLoggedOutFromServer(ClientDisconnectionFromServerEvent event) {
-			for(Ability ability : OrmoyoUtil.proxy.getUnlockedAbilities(null)) {
-				if(ability.isEnabled()) {
-					ability.onClientDisconnectedFromServer(event);
-				}
-			}
-			try {
-				Field field = ClientProxy.class.getDeclaredField("unlockedAbilities");
-				field.setAccessible(true);
-				((Set<Ability>)field.get(null)).clear();
-			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		}
+	}
+	
+	public static interface IAbilityEventInvoker<T extends Event> {
+		public boolean invoke(Ability ability, T event);
 	}
 }

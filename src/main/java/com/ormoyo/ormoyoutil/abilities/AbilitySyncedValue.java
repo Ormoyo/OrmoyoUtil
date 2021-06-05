@@ -5,13 +5,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 import com.google.common.collect.Maps;
 import com.ormoyo.ormoyoutil.OrmoyoUtil;
+import com.ormoyo.ormoyoutil.event.AbilityEvent.AbilityGetSyncedValueEvent;
+import com.ormoyo.ormoyoutil.network.MessageGetAbilitySyncedValueOnClient;
+import com.ormoyo.ormoyoutil.network.MessageGetAbilitySyncedValueOnServer;
 import com.ormoyo.ormoyoutil.network.MessageInvokeMethodOnClient;
 import com.ormoyo.ormoyoutil.network.MessageInvokeMethodOnServer;
-import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueToClient;
-import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueToServer;
+import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueOnClient;
+import com.ormoyo.ormoyoutil.network.MessageUpdateAbilitySyncedValueOnServer;
 import com.ormoyo.ormoyoutil.util.Utils;
 
 import io.netty.buffer.ByteBuf;
@@ -47,32 +52,110 @@ public class AbilitySyncedValue {
 		return PARSER_REGISTRY;
 	}
 	
+	/**
+	 * Sets the ability field value on the opposite side(If you're on server side this will change the ability client counterpart field value, and same otherwise)
+	 * @param ability The ability to be set the value on
+	 * @param fieldName The value field name
+	 * @param value The value to be set on the opposite side
+	 */
 	public static<T> void setValue(Ability ability, String fieldName, T value) {
+		if(ability.getOwner() == null) return;
 		if(ability.getOwner().getEntityWorld().isRemote) {
-			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageUpdateAbilitySyncedValueToServer(ability, fieldName, value, ability.getOwner()));
+			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageUpdateAbilitySyncedValueOnServer(ability, fieldName, value, ability.getOwner()));
 		}else {
-			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageUpdateAbilitySyncedValueToClient(ability, fieldName, value, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
+			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageUpdateAbilitySyncedValueOnClient(ability, fieldName, value, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
 		}
 	}
 	
-	public static<T> void setValue(Ability ability, Class<?> superClass, String fieldName, T value) {
+	/**
+	 * Sets the ability field value on the opposite side(If you're on server side this will change the ability client counterpart field value, and same otherwise)
+	 * @param ability The ability to be set the value on
+	 * @param superClass The super class of the ability if you want to change a field on the super class value for the ability
+	 * @param fieldName The value field name
+	 * @param value The value to be set on the opposite side
+	 */
+	public static<T> void setValue(Ability ability, Class<? extends Ability> superClass, String fieldName, T value) {
+		if(ability.getOwner() == null) return;
 		if(ability.getOwner().getEntityWorld().isRemote) {
-			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageUpdateAbilitySyncedValueToServer(ability, superClass, fieldName, value, ability.getOwner()));
+			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageUpdateAbilitySyncedValueOnServer(ability, superClass, fieldName, value, ability.getOwner()));
 		}else {
-			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageUpdateAbilitySyncedValueToClient(ability, superClass, fieldName, value, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
+			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageUpdateAbilitySyncedValueOnClient(ability, superClass, fieldName, value, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static<T> T getValue(Ability ability, String fieldName) {
-		try {
-			return (T) ability.getClass().getField(fieldName).get(ability);
-		} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-			e.printStackTrace();
+	
+	/**
+	 * Gets the ability field value on the opposite side(If you're on server side this will get the ability client counterpart field value, and same otherwise) and to get the field a {@link AbilityGetSyncedValueEvent} will be fired
+	 * @param ability The ability to get the value from
+	 * @param fieldName The value field name
+	 * @return A uuid to be used on the {@link AbilityGetSyncedValueEvent}
+	 */
+	public static UUID getValue(Ability ability, String fieldName) {
+		if(ability.getOwner() == null) return null;
+		UUID id = UUID.randomUUID();
+		if(ability.getOwner().getEntityWorld().isRemote) {
+			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageGetAbilitySyncedValueOnServer(ability, fieldName, id, ability.getOwner()));
+		}else {
+			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageGetAbilitySyncedValueOnClient(ability, fieldName, id, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
 		}
-		return null;
+		return id;
 	}
 	
+	/**
+	 * Gets the ability field value on the opposite side(If you're on server side this will get the ability client counterpart field value, and same otherwise) and to get the field a {@link AbilityGetSyncedValueEvent} will be fired
+	 * @param ability The ability to get the value from
+	 * @param fieldName The value field name
+	 * @param id The id to be used on the {@link AbilityGetSyncedValueEvent}
+	 */
+	public static void getValue(Ability ability, String fieldName, UUID id) {
+		if(ability.getOwner() == null) return;
+		if(ability.getOwner().getEntityWorld().isRemote) {
+			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageGetAbilitySyncedValueOnServer(ability, fieldName, id, ability.getOwner()));
+		}else {
+			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageGetAbilitySyncedValueOnClient(ability, fieldName, id, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
+		}
+	}
+	
+	/**
+	 * Gets the ability field value on the opposite side(If you're on server side this will get the ability client counterpart field value, and same otherwise) and to get the field a {@link AbilityGetSyncedValueEvent} will be fired
+	 * @param ability The ability to get the value from
+	 * @param superClass The super class of the ability if you want to get a field on the super class value for the ability
+	 * @param fieldName The value field name
+	 * @return A uuid to be used on the {@link AbilityGetSyncedValueEvent}
+	 */
+	public static UUID getValue(Ability ability, Class<? extends Ability> superClass, String fieldName) {
+		if(ability.getOwner() == null) return null;
+		UUID id = UUID.randomUUID();
+		if(ability.getOwner().getEntityWorld().isRemote) {
+			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageGetAbilitySyncedValueOnServer(ability, superClass, fieldName, id, ability.getOwner()));
+		}else {
+			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageGetAbilitySyncedValueOnClient(ability, superClass, fieldName, id, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
+		}
+		return id;
+	}
+	
+	/**
+	 * Gets the ability field value on the opposite side(If you're on server side this will get the ability client counterpart field value, and same otherwise) and to get the field a {@link AbilityGetSyncedValueEvent} will be fired
+	 * @param ability The ability to get the value from
+	 * @param superClass The super class of the ability if you want to get a field on the super class value for the ability
+	 * @param fieldName The value field name
+	 * @param id The id to be used on the {@link AbilityGetSyncedValueEvent}
+	 */
+	public static void getValue(Ability ability, Class<? extends Ability> superClass, String fieldName, UUID id) {
+		if(ability.getOwner() == null) return;
+		if(ability.getOwner().getEntityWorld().isRemote) {
+			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageGetAbilitySyncedValueOnServer(ability, superClass, fieldName, id, ability.getOwner()));
+		}else {
+			OrmoyoUtil.NETWORK_WRAPPER.sendTo(new MessageGetAbilitySyncedValueOnClient(ability, superClass, fieldName, id, ability.getOwner()), (EntityPlayerMP) ability.getOwner());
+		}
+	}
+	
+	/**
+	 * Invoke a method on the opposite side(If you're on server side this will invoke a method on the ability client counterpart, and same otherwise)
+	 * @param ability The ability to invoke the method on
+	 * @param methodName The method name
+	 * @param methodArgs The method args
+	 */
 	public static void invokeMethod(Ability ability, String methodName, Object...methodArgs) {
 		if(ability.getOwner().getEntityWorld().isRemote) {
 			OrmoyoUtil.NETWORK_WRAPPER.sendToServer(new MessageInvokeMethodOnServer(ability, methodName, ability.getOwner(), methodArgs));
@@ -315,12 +398,13 @@ public class AbilitySyncedValue {
 		public static final ISyncedValueParser<ResourceLocation> RESOURCE_LOCATION = new ISyncedValueParser<ResourceLocation>() {
 			@Override
 			public void write(Writer writer, EntityPlayer player, ResourceLocation value) {
-				writer.writeString(value.toString());
+				writer.writeString(value.getResourceDomain());
+				writer.writeString(value.getResourcePath());
 			}
 
 			@Override
 			public ResourceLocation read(Reader reader, EntityPlayer player) {
-				return new ResourceLocation(reader.readString());
+				return new ResourceLocation(reader.readString(), reader.readString());
 			}
 		};
 		
@@ -422,6 +506,18 @@ public class AbilitySyncedValue {
 					return entityDamage;
 				}
 				return source;
+			}
+		};
+		
+		public static final ISyncedValueParser<java.util.UUID> UUID = new ISyncedValueParser<java.util.UUID>() {
+			@Override
+			public void write(Writer writer, EntityPlayer player, java.util.UUID value) {
+				writer.writeString(value.toString());
+			}
+
+			@Override
+			public java.util.UUID read(Reader reader, EntityPlayer player) {
+				return java.util.UUID.fromString(reader.readString());
 			}
 		};
 	}
